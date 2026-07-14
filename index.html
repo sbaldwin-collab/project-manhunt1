@@ -2,917 +2,196 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PROJECT MANHUNT — The Blocks</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>PROJECT MANHUNT — Civilian Night Chase</title>
 <style>
-  html, body { height:100%; overflow:hidden; overscroll-behavior:none; background:#000; }
-  * { box-sizing:border-box; margin:0; padding:0; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:none; }
-  #canvas-host { position:fixed; inset:0; }
-  canvas { display:block; width:100%; height:100%; }
-
-  /* ---------- HUD ---------- */
-  #hud { position:fixed; inset:0; pointer-events:none; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:#fff; z-index:10; }
-  #hud * { pointer-events:auto; }
-
-  #top-bar { position:absolute; top:12px; left:12px; right:12px; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
-  .panel { background:rgba(6,8,12,.62); border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:6px 12px; backdrop-filter:blur(3px); }
-  #timer-val { font-family:'SF Mono',Consolas,monospace; font-size:17px; font-weight:700; text-align:center; }
-  #timer-label,#stat-label { font-size:7.5px; letter-spacing:1.2px; text-transform:uppercase; color:#8a94a6; text-align:center; }
-  #stamina-bar-wrap { width:88px; height:7px; background:#1c2029; border-radius:4px; overflow:hidden; margin-top:3px; }
-  #stamina-bar { height:100%; width:100%; background:linear-gradient(90deg,#3b82f6,#60a5fa); }
-  #detect-val { font-weight:700; font-size:11px; letter-spacing:1px; text-align:center; min-width:74px; }
-  #crew-val { font-size:13px; font-weight:700; text-align:center; }
-
-  #rescue-prompt {
-    position:absolute; top:46%; left:50%; transform:translate(-50%,-50%);
-    background:rgba(214,158,46,.92); color:#1a1300; font-weight:800; padding:10px 18px; border-radius:12px;
-    font-size:13px; letter-spacing:.5px; display:none; text-transform:uppercase;
-  }
-
-  #bottom-row { position:absolute; bottom:14px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:flex-end; }
-  #action-buttons { display:flex; gap:8px; }
-  .action-btn { width:56px; height:56px; border-radius:16px; border:2px solid rgba(255,255,255,.18); background:rgba(6,8,12,.68); color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; touch-action:manipulation; }
-  .action-btn.active { filter:brightness(1.5); box-shadow:0 0 14px rgba(255,255,255,.35); }
-  .action-btn .lbl { position:absolute; bottom:2px; font-size:7px; letter-spacing:.5px; }
-  #btn-pause { width:40px; height:40px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:rgba(6,8,12,.68); color:#fff; font-size:15px; }
-
-  #joy-zone { position:absolute; left:0; bottom:0; width:46%; height:52%; }
-  #look-zone { position:absolute; right:0; bottom:0; width:54%; height:60%; }
-
-  #joystick-base { position:absolute; width:84px; height:84px; border-radius:50%; border:2px solid rgba(255,255,255,.2); background:rgba(255,255,255,.05); display:none; }
-  #joystick-nub { position:absolute; width:36px; height:36px; border-radius:50%; background:rgba(59,130,246,.55); border:1.5px solid rgba(255,255,255,.55); left:24px; top:24px; }
-
-  #log-feed { position:absolute; left:12px; bottom:82px; width:220px; max-height:80px; overflow:hidden; display:flex; flex-direction:column-reverse; font-family:'SF Mono',Consolas,monospace; font-size:9.5px; color:#9fb0c9; }
-  .log-entry { margin-top:2px; border-left:2px solid #4a5568; padding-left:5px; background:rgba(0,0,0,.35); }
-  .log-alert { border-left-color:#e53e3e; color:#fca5a5; }
-  .log-success { border-left-color:#48bb78; color:#9ae6b4; }
-  .log-info { border-left-color:#3b82f6; color:#93c5fd; }
-
-  #debug-bar { position:absolute; top:78px; left:12px; font-family:'SF Mono',Consolas,monospace; font-size:8.5px; color:#7fd8a0; background:rgba(0,0,0,.5); padding:4px 7px; border-radius:6px; white-space:pre; }
-
-  #overlay {
-    position:fixed; inset:0; background:rgba(4,5,8,.94); z-index:50;
-    display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:10px; padding:24px;
-  }
-  #overlay h1 { font-size:28px; letter-spacing:1.5px; }
-  #overlay p { color:#a0aec0; font-size:13px; max-width:340px; }
-  #overlay .stats { display:flex; gap:22px; margin:6px 0; }
-  #overlay .stat-val { font-size:19px; font-weight:700; }
-  #overlay .stat-label { font-size:8.5px; color:#718096; text-transform:uppercase; letter-spacing:1px; }
-  #overlay button { margin-top:6px; padding:13px 30px; border:none; border-radius:12px; background:#3b82f6; color:#fff; font-weight:700; letter-spacing:.5px; text-transform:uppercase; font-size:12.5px; }
-  #overlay.win h1 { color:#48bb78; }
-  #overlay.lose h1 { color:#ef4444; }
-  #loading { font-size:11px; color:#647089; letter-spacing:1px; text-transform:uppercase; }
+html,body{height:100%;overflow:hidden;background:#02050a}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;touch-action:none}
+#host{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none;color:#fff;font-family:Inter,system-ui,-apple-system,sans-serif;text-shadow:0 2px 8px #000}
+.top{position:absolute;top:max(12px,env(safe-area-inset-top));left:14px;right:14px;display:grid;grid-template-columns:1fr auto 1fr;gap:10px}
+.brand{font-weight:900;letter-spacing:2px;font-size:13px}.brand b{color:#ef4444}.sub{font-size:8px;color:#93a4bb;letter-spacing:1.4px}
+.time{text-align:center;font:900 26px ui-monospace,monospace}.objective{text-align:center;font-size:8px;letter-spacing:1.2px;color:#cbd5e1}
+.right{text-align:right}.status{display:inline-block;margin-top:5px;padding:5px 9px;border:1px solid #22c55e;background:rgba(34,197,94,.14);font-size:9px;font-weight:900;letter-spacing:1.2px}
+.status.suspicious{border-color:#f59e0b;background:rgba(245,158,11,.16);color:#fde68a}.status.spotted{border-color:#ef4444;background:rgba(239,68,68,.2);color:#fecaca}
+.bottom{position:absolute;left:14px;right:14px;bottom:max(14px,env(safe-area-inset-bottom));display:grid;grid-template-columns:220px 1fr auto;gap:12px;align-items:end}
+.card{background:linear-gradient(90deg,rgba(5,10,18,.92),rgba(5,10,18,.48));padding:9px 11px;border-left:3px solid #3b82f6}
+.row{display:flex;justify-content:space-between;font-size:8px;letter-spacing:1.2px;color:#cbd5e1}.track{height:8px;background:#111827;margin-top:6px;overflow:hidden}.fill{height:100%;width:100%;background:linear-gradient(90deg,#2563eb,#60a5fa)}
+#detectTrack{margin-top:7px}.detectFill{height:100%;width:0;background:linear-gradient(90deg,#f59e0b,#ef4444)}
+#prompt{text-align:center;font-size:10px;font-weight:900;letter-spacing:1px}
+.buttons{display:flex;gap:8px;pointer-events:auto}.btn{width:52px;height:46px;border:1px solid rgba(255,255,255,.16);background:rgba(7,12,20,.85);color:#fff;border-radius:7px;font-weight:900}
+#mobile{display:none}.zone{position:fixed;bottom:0;width:50%;height:52vh;z-index:12}.move{left:0}.look{right:0}
+.stick{position:fixed;width:108px;height:108px;border-radius:50%;border:2px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);display:none;transform:translate(-50%,-50%)}.knob{position:absolute;left:50%;top:50%;width:44px;height:44px;border-radius:50%;transform:translate(-50%,-50%);background:rgba(59,130,246,.5);border:1px solid rgba(255,255,255,.5)}
+.actions{position:fixed;right:14px;bottom:68px;z-index:14;display:grid;grid-template-columns:repeat(2,68px);gap:8px}.actions button{height:48px;border:1px solid rgba(255,255,255,.18);background:rgba(7,12,20,.8);color:#fff;border-radius:50%;font-size:8px;font-weight:900}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle,rgba(15,23,42,.72),rgba(2,6,12,.97));z-index:30}
+.panel{width:min(640px,94vw);padding:30px;text-align:center;border:1px solid rgba(255,255,255,.13);background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(3,7,14,.98))}
+.panel h1{font-size:clamp(36px,8vw,70px);line-height:.95}.panel p{max-width:520px;margin:16px auto;color:#aeb8c7;line-height:1.5;font-size:13px}
+.primary{border:0;background:#ef4444;color:#fff;font-weight:900;letter-spacing:1.3px;padding:13px 25px}
+@media(pointer:coarse),(max-width:900px){#mobile{display:block}.bottom{grid-template-columns:150px 1fr auto}.buttons{position:absolute;right:0;bottom:120px}.brand{font-size:10px}.sub,.objective{display:none}}
 </style>
 </head>
 <body>
-
-<div id="canvas-host"></div>
-
+<div id="host"></div>
 <div id="hud">
-  <div id="top-bar">
-    <div class="panel">
-      <div style="font-size:8px;color:#8a94a6;font-weight:700;">STAMINA</div>
-      <div id="stamina-bar-wrap"><div id="stamina-bar"></div></div>
-    </div>
-    <div class="panel"><div id="timer-val">01:30</div><div id="timer-label">Survive</div></div>
-    <div class="panel"><div id="detect-val" style="color:#48bb78;">HIDDEN</div><div id="stat-label">Status</div></div>
-    <div class="panel"><div id="crew-val">2 / 0</div><div id="stat-label">Crew Free / Jailed</div></div>
+  <div class="top">
+    <div><div class="brand">PROJECT <b>MANHUNT</b></div><div class="sub">THE BLOCKS · CIVILIAN NIGHT CHASE</div></div>
+    <div><div class="time" id="timer">01:30</div><div class="objective">SURVIVE · HIDE · RESCUE</div></div>
+    <div class="right"><div id="crew">3 FREE</div><div class="status" id="status">HIDDEN</div></div>
   </div>
-
-  <div id="rescue-prompt">Hold RESCUE to free crew</div>
-  <div id="debug-bar">booting…</div>
-  <div id="log-feed"></div>
-
-  <div id="joy-zone"></div>
-  <div id="look-zone"></div>
-  <div id="joystick-base"><div id="joystick-nub"></div></div>
-
-  <div id="bottom-row">
-    <button id="btn-pause">⏸</button>
-    <div id="action-buttons">
-      <button class="action-btn" id="btn-crouch">🧎<span class="lbl">CROUCH</span></button>
-      <button class="action-btn" id="btn-distract">📣<span class="lbl">NOISE</span></button>
-      <button class="action-btn" id="btn-rescue">🔓<span class="lbl">RESCUE</span></button>
-      <button class="action-btn" id="btn-sprint">⚡<span class="lbl">SPRINT</span></button>
+  <div class="bottom">
+    <div class="card">
+      <div class="row"><span>STAMINA</span><span id="stamVal">100</span></div>
+      <div class="track"><div class="fill" id="stamFill"></div></div>
+      <div class="row" style="margin-top:8px"><span>DETECTION</span><span id="detectVal">0%</span></div>
+      <div class="track" id="detectTrack"><div class="detectFill" id="detectFill"></div></div>
+    </div>
+    <div id="prompt"></div>
+    <div class="buttons">
+      <button class="btn" id="noiseBtn">📻</button>
+      <button class="btn" id="sodaBtn">🥤</button>
     </div>
   </div>
 </div>
-
-<div id="overlay">
-  <h1>PROJECT MANHUNT</h1>
-  <p id="overlay-sub">The Blocks, 2 AM. Survive 90 seconds, dodge the Hunter's flashlight, and free your crew from the jail cage. Drag the right side of the screen to look around.</p>
-  <div class="stats" id="overlay-stats" style="display:none;">
-    <div><div class="stat-val" id="stat-time">0:00</div><div class="stat-label">Survived</div></div>
-    <div><div class="stat-val" id="stat-rescued">0</div><div class="stat-label">Rescued</div></div>
-    <div><div class="stat-val" id="stat-best">0:00</div><div class="stat-label">Best</div></div>
+<div id="mobile">
+  <div class="zone move" id="moveZone"><div class="stick" id="stick"><div class="knob" id="knob"></div></div></div>
+  <div class="zone look" id="lookZone"></div>
+  <div class="actions">
+    <button id="sprintBtn">SPRINT</button>
+    <button id="crouchBtn">CROUCH</button>
+    <button id="rescueBtn">RESCUE</button>
   </div>
-  <div id="loading">loading engine…</div>
-  <button id="btn-start" style="display:none;">Start Game</button>
 </div>
-
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <h1>PROJECT MANHUNT</h1>
+    <p>A civilian night chase through The Blocks. Stay out of the Hunter’s flashlight, use shadows and cover, distract them with sound, and rescue your friends.</p>
+    <button class="primary" id="startBtn">START GAME</button>
+  </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-(function(){
-  'use strict';
-  if (typeof THREE === 'undefined'){
-    document.getElementById('loading').textContent = 'Failed to load 3D engine — check your internet connection and reload.';
-    return;
-  }
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('btn-start').style.display = 'inline-block';
-
-  // =====================================================================
-  // Renderer / Scene / Camera
-  // =====================================================================
-  const host = document.getElementById('canvas-host');
-  const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  host.appendChild(renderer.domElement);
-
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x05070b);
-  scene.fog = new THREE.FogExp2(0x070a10, 0.028);
-
-  const camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 300);
-
-  // =====================================================================
-  // Lighting — dark blue nighttime, warm streetlights, amber jail spot
-  // =====================================================================
-  scene.add(new THREE.AmbientLight(0x2c3550, 0.9));
-  const moon = new THREE.DirectionalLight(0x8fa8d6, 0.35);
-  moon.position.set(-30, 40, -20);
-  moon.castShadow = true;
-  moon.shadow.mapSize.set(1024,1024);
-  moon.shadow.camera.left = -50; moon.shadow.camera.right = 50;
-  moon.shadow.camera.top = 50; moon.shadow.camera.bottom = -50;
-  scene.add(moon);
-
-  function addStreetlight(x,z){
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,4.2,8), new THREE.MeshStandardMaterial({color:0x14171c}));
-    pole.position.set(x,2.1,z); pole.castShadow = true; scene.add(pole);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.22,8,8), new THREE.MeshStandardMaterial({color:0xffdca0, emissive:0xffbb55, emissiveIntensity:1.4}));
-    bulb.position.set(x,4.15,z); scene.add(bulb);
-    const light = new THREE.PointLight(0xffbb66, 1.1, 16, 2);
-    light.position.set(x,4,z);
-    scene.add(light);
-  }
-
-  // =====================================================================
-  // World bounds / collision registry
-  // =====================================================================
-  const WORLD_HALF = 34;
-  const obstacles = []; // {x,z,w,d} axis-aligned footprints (collision, in XZ plane)
-  function addObstacleBox(x,z,w,d,h,color,label){
-    const geo = new THREE.BoxGeometry(w,h,d);
-    const mat = new THREE.MeshStandardMaterial({ color: color||0x1c1f26, roughness:0.85, metalness:0.05 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x, h/2, z);
-    mesh.castShadow = true; mesh.receiveShadow = true;
-    scene.add(mesh);
-    obstacles.push({ x:x-w/2, z:z-d/2, w:w, d:d, y:h });
-    return mesh;
-  }
-
-  // Ground
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(WORLD_HALF*2+20, WORLD_HALF*2+20),
-    new THREE.MeshStandardMaterial({ color:0x11141a, roughness:1 })
-  );
-  ground.rotation.x = -Math.PI/2;
-  ground.receiveShadow = true;
-  scene.add(ground);
-
-  // Faint street-lane markings
-  for (let i=-2;i<=2;i++){
-    const lane = new THREE.Mesh(new THREE.PlaneGeometry(0.15, WORLD_HALF*2), new THREE.MeshBasicMaterial({color:0x2a3040}));
-    lane.rotation.x = -Math.PI/2; lane.position.set(i*10, 0.01, 0); scene.add(lane);
-  }
-
-  // ---- Buildings (form streets + alleys) ----
-  addObstacleBox(-20, -18, 14, 16, 9, 0x1b2230, 'Building A');
-  addObstacleBox(20, -18, 14, 16, 11, 0x202838, 'Building B');
-  addObstacleBox(-20, 18, 14, 16, 8, 0x1e2532, 'Building C');
-  addObstacleBox(20, 18, 14, 16, 10, 0x232c3d, 'Building D');
-  addObstacleBox(0, -24, 10, 8, 7, 0x1a212c, 'Corner Store');
-  addObstacleBox(0, 24, 10, 8, 12, 0x252e40, 'Tower');
-
-  // Emissive "lit windows" strips on buildings for a bit of cinematic flair
-  function addWindowStrip(x,y,z,w,h){
-    const strip = new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshStandardMaterial({ color:0xffdca0, emissive:0xffcf88, emissiveIntensity:0.9 }));
-    strip.position.set(x,y,z);
-    scene.add(strip);
-  }
-  addWindowStrip(-20, 5, -9.9, 6, 0.6);
-  addWindowStrip(20, 6, -9.9, 6, 0.6);
-  addWindowStrip(-20, 4.5, 26.05, 6, 0.6);
-  addWindowStrip(0.05, 7, 20, 0.6, 3);
-
-  // ---- Fences (thin low walls) ----
-  addObstacleBox(-6, -2, 0.4, 10, 1.4, 0x2b323f, 'Fence');
-  addObstacleBox(6, 2, 0.4, 10, 1.4, 0x2b323f, 'Fence');
-
-  // ---- Parked cars ----
-  function addCar(x,z,rot,color){
-    const g = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.BoxGeometry(4.2,1.1,1.9), new THREE.MeshStandardMaterial({color:color||0x333c4d, metalness:0.4, roughness:0.5}));
-    body.position.y = 0.7; body.castShadow = true;
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.75,1.7), new THREE.MeshStandardMaterial({color:0x121620, metalness:0.3, roughness:0.6}));
-    cabin.position.set(-0.2,1.35,0); cabin.castShadow = true;
-    g.add(body, cabin);
-    g.position.set(x,0,z); g.rotation.y = rot||0;
-    scene.add(g);
-    // approximate footprint (rotated boxes simplified as axis-aligned bounding footprint)
-    const w = Math.abs(4.2*Math.cos(rot||0)) + Math.abs(1.9*Math.sin(rot||0));
-    const d = Math.abs(4.2*Math.sin(rot||0)) + Math.abs(1.9*Math.cos(rot||0));
-    obstacles.push({ x:x-w/2, z:z-d/2, w:w, d:d, y:1.8 });
-  }
-  addCar(-9, 8, 0.1, 0x54607a);
-  addCar(9, -8, Math.PI/2+0.05, 0x8a2f2f);
-  addCar(-9, -9, -0.15, 0x2f5f8a);
-
-  // ---- Dumpsters ----
-  function addDumpster(x,z){
-    addObstacleBox(x, z, 2.2, 1.4, 1.3, 0x2f4a33, 'Dumpster');
-  }
-  addDumpster(-15, 2);
-  addDumpster(14, -2);
-
-  // ---- Crates (stacked, hiding spot flavor) ----
-  function addCrateStack(x,z){
-    addObstacleBox(x, z, 1.4, 1.4, 1.1, 0x4a3a25, 'Crate');
-    addObstacleBox(x+0.9, z+0.2, 1.1, 1.1, 0.9, 0x53402a, 'Crate');
-  }
-  addCrateStack(3, 9);
-  addCrateStack(-4, -13);
-
-  // ---- Stairway (decorative + obstacle) ----
-  function addStairs(x,z){
-    for (let i=0;i<5;i++){
-      addObstacleBox(x, z + i*0.9, 3, 0.9, 0.35+i*0.35, 0x262b34, 'Step');
-    }
-  }
-  addStairs(24, 4);
-
-  // ---- Basketball court (visual only, no collision) ----
-  const court = new THREE.Mesh(new THREE.PlaneGeometry(10,16), new THREE.MeshStandardMaterial({color:0x5a3a20, roughness:1}));
-  court.rotation.x = -Math.PI/2; court.position.set(0, 0.015, 4);
-  scene.add(court);
-  const hoopPole = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,3.2,8), new THREE.MeshStandardMaterial({color:0x1a1d23}));
-  hoopPole.position.set(0, 1.6, -3); scene.add(hoopPole);
-  const hoopRing = new THREE.Mesh(new THREE.TorusGeometry(0.45,0.04,8,16), new THREE.MeshStandardMaterial({color:0xff7a1a}));
-  hoopRing.rotation.x = Math.PI/2; hoopRing.position.set(0,3.1,-3); scene.add(hoopRing);
-
-  // ---- Streetlights scattered along "streets" ----
-  [[-14,0],[14,0],[0,-12],[0,12],[-6,-20],[6,20]].forEach(p=>addStreetlight(p[0],p[1]));
-
-  // ---- Jail: central cage with amber spotlight, no collision (open access) ----
-  const JAIL = { x:0, z:0, r:3.4 };
-  const jailFloor = new THREE.Mesh(new THREE.CircleGeometry(JAIL.r,24), new THREE.MeshStandardMaterial({color:0x1a1608}));
-  jailFloor.rotation.x = -Math.PI/2; jailFloor.position.set(JAIL.x,0.02,JAIL.z); scene.add(jailFloor);
-  for (let i=0;i<16;i++){
-    const a = (i/16)*Math.PI*2;
-    if (a > 0.35 && a < 0.95) continue; // gap = entrance
-    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,2.6,6), new THREE.MeshStandardMaterial({color:0x3a3f4a, metalness:0.6, roughness:0.4}));
-    bar.position.set(JAIL.x+Math.cos(a)*JAIL.r, 1.3, JAIL.z+Math.sin(a)*JAIL.r);
-    scene.add(bar);
-  }
-  const jailSpot = new THREE.SpotLight(0xffc65a, 2.2, 14, Math.PI/6, 0.4);
-  jailSpot.position.set(JAIL.x, 8, JAIL.z);
-  jailSpot.target.position.set(JAIL.x, 0, JAIL.z);
-  scene.add(jailSpot, jailSpot.target);
-
-  // =====================================================================
-  // Humanoid character factory (procedural low-poly figure, no external models)
-  // =====================================================================
-  function createHumanoid(accent){
-    const g = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({ color:0x14161b, roughness:0.75 });
-    const accentMat = new THREE.MeshStandardMaterial({ color:accent, roughness:0.5, emissive:accent, emissiveIntensity:0.18 });
-
-    const hips = new THREE.Group(); hips.position.y = 1.0; g.add(hips);
-
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.65,0.28), bodyMat);
-    torso.position.y = 0.42; torso.castShadow = true; hips.add(torso);
-
-    const accentStripe = new THREE.Mesh(new THREE.BoxGeometry(0.52,0.16,0.3), accentMat);
-    accentStripe.position.y = 0.62; hips.add(accentStripe);
-
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.19,10,10), bodyMat);
-    head.position.y = 0.9; head.castShadow = true; hips.add(head);
-
-    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.2,10,10,0,Math.PI*2,0,Math.PI/2.1), accentMat);
-    cap.position.y = 0.94; hips.add(cap);
-
-    function limb(w,h,d,mat){ const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat); m.castShadow = true; return m; }
-
-    const shoulderL = new THREE.Group(); shoulderL.position.set(-0.32,0.68,0); hips.add(shoulderL);
-    const armL = limb(0.14,0.55,0.14,bodyMat); armL.position.y = -0.28; shoulderL.add(armL);
-    const shoulderR = new THREE.Group(); shoulderR.position.set(0.32,0.68,0); hips.add(shoulderR);
-    const armR = limb(0.14,0.55,0.14,bodyMat); armR.position.y = -0.28; shoulderR.add(armR);
-
-    const hipL = new THREE.Group(); hipL.position.set(-0.14,0.1,0); hips.add(hipL);
-    const legL = limb(0.17,0.6,0.17,bodyMat); legL.position.y = -0.3; hipL.add(legL);
-    const hipR = new THREE.Group(); hipR.position.set(0.14,0.1,0); hips.add(hipR);
-    const legR = limb(0.17,0.6,0.17,bodyMat); legR.position.y = -0.3; hipR.add(legR);
-
-    scene.add(g);
-    return { group:g, hips, torso, head, cap, shoulderL, shoulderR, hipL, hipR, bodyMat, accentMat };
-  }
-
-  function animateHumanoid(ch, dt, phaseState){
-    // phaseState: {speed(0..1 walk,1..2 run), phase, crouch(0/1), stationary}
-    const speed = phaseState.speed;
-    const freq = phaseState.crouch ? 5 : (speed > 1 ? 8.5 : 5.2);
-    phaseState.phase += dt * freq * Math.max(speed, phaseState.crouch ? 0.6 : 0.12);
-    const amp = phaseState.crouch ? 0.35 : (0.15 + Math.min(speed,2)*0.35);
-    const s = Math.sin(phaseState.phase);
-
-    if (phaseState.captured){
-      ch.shoulderL.rotation.x = 0.15; ch.shoulderR.rotation.x = 0.15;
-      ch.hipL.rotation.x = 0; ch.hipR.rotation.x = 0;
-      ch.hips.position.y = 1.0;
-      ch.bodyMat.color.setHex(0x2a2d33);
-      ch.accentMat.color.setHex(0x565a63); ch.accentMat.emissiveIntensity = 0;
-      return;
-    }
-
-    ch.shoulderL.rotation.x = s*amp;
-    ch.shoulderR.rotation.x = -s*amp;
-    ch.hipL.rotation.x = -s*amp;
-    ch.hipR.rotation.x = s*amp;
-
-    const bob = Math.abs(s)*0.04*(phaseState.crouch?0.4:1);
-    const crouchDrop = phaseState.crouch ? 0.72 : 1.0;
-    ch.hips.position.y = 1.0*crouchDrop + bob;
-    ch.torso.rotation.x = phaseState.crouch ? 0.25 : Math.min(speed,2)*0.06;
-  }
-
-  // =====================================================================
-  // Entities
-  // =====================================================================
-  const COLORS = { player:0x3b82f6, mate:0x34d399, hunter:0xef4444 };
-
-  function makeEntity(role){
-    const ch = createHumanoid(COLORS[role]);
-    return {
-      role, ch,
-      x:0, z:0, facing:0,
-      caught:false,
-      anim:{ speed:0, phase:0, crouch:false, captured:false },
-      // AI fields
-      state:'patrol', target:null, chaseUntil:0, liveTrack:false,
-      wanderT:0, lastX:0, lastZ:0, stuckT:0, hideT:0
-    };
-  }
-
-  let player, mates, hunter;
-
-  function randomFreePoint(radius){
-    let tries=0, x=0, z=0;
-    do {
-      x = (Math.random()*2-1)*(WORLD_HALF-3);
-      z = (Math.random()*2-1)*(WORLD_HALF-3);
-      tries++;
-    } while (collidesCircleRects(x,z,radius) && tries < 30);
-    return {x,z};
-  }
-
-  function collidesCircleRects(x,z,r){
-    for (let i=0;i<obstacles.length;i++){
-      const o = obstacles[i];
-      const cx = Math.max(o.x, Math.min(x, o.x+o.w));
-      const cz = Math.max(o.z, Math.min(z, o.z+o.d));
-      const dx=x-cx, dz=z-cz;
-      if (dx*dx+dz*dz < r*r) return true;
-    }
-    return false;
-  }
-  function resolveMove(e, dx, dz, radius){
-    const nx = e.x+dx;
-    if (!collidesCircleRects(nx, e.z, radius)) e.x = nx;
-    const nz = e.z+dz;
-    if (!collidesCircleRects(e.x, nz, radius)) e.z = nz;
-    e.x = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, e.x));
-    e.z = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, e.z));
-  }
-  function hasLineOfSight(ax,az,bx,bz){
-    const samples = 16;
-    for (let i=1;i<samples;i++){
-      const t = i/samples;
-      const px = ax+(bx-ax)*t, pz = az+(bz-az)*t;
-      for (let j=0;j<obstacles.length;j++){
-        const o = obstacles[j];
-        if (px>=o.x && px<=o.x+o.w && pz>=o.z && pz<=o.z+o.d) return false;
-      }
-    }
-    return true;
-  }
-
-  const PLAYER_R=0.32, MATE_R=0.3, HUNTER_R=0.34;
-  const BASE_SPEED=4.6, SPRINT_MULT=1.85, CROUCH_MULT=0.55;
-  const CATCH_DIST=0.9, VISION_RANGE=15, VISION_ANGLE=40, NOISE_RANGE=17, JAIL_TRIGGER_R=4.2;
-  const ROUND_LENGTH=90;
-
-  // =====================================================================
-  // Game / round state
-  // =====================================================================
-  let running=false, gameId=0, rafHandle=null;
-  let roundStart=0, elapsed=0, rescuedCount=0, bestTime=0;
-  let stamina=100, isSprinting=false, isCrouching=false;
-  let noisePings=[];
-  let lastLoggedHunterState=null;
-  let debugTick=0;
-
-  function loadBest(){ try { const v=localStorage.getItem('manhunt3d-best'); bestTime=v?parseFloat(v):0; } catch(e){ bestTime=0; } }
-  function saveBest(t){ bestTime=Math.max(bestTime||0,t); try{ localStorage.setItem('manhunt3d-best', String(bestTime)); }catch(e){} }
-  function fmtTime(s){ s=Math.max(0,Math.floor(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
-
-  const feed = document.getElementById('log-feed');
-  function log(text,type){
-    const e = document.createElement('div');
-    e.className='log-entry '+(type||'');
-    e.textContent = text;
-    feed.appendChild(e);
-    if (feed.children.length>10) feed.removeChild(feed.firstChild);
-  }
-
-  // =====================================================================
-  // Camera controller (third person, drag-to-look)
-  // =====================================================================
-  let camYaw = Math.PI, camPitch = 0.32;
-  const camDist = 5.2, camHeight = 2.1;
-  let curFov = 62;
-
-  function updateCamera(dt, targetE, sprinting){
-    const desiredFov = sprinting ? 70 : 62;
-    curFov += (desiredFov-curFov)*Math.min(1,dt*4);
-    camera.fov = curFov; camera.updateProjectionMatrix();
-
-    const offX = Math.sin(camYaw)*camDist*Math.cos(camPitch);
-    const offZ = Math.cos(camYaw)*camDist*Math.cos(camPitch);
-    const offY = camHeight + Math.sin(camPitch)*camDist;
-    const desired = new THREE.Vector3(targetE.x+offX, offY, targetE.z+offZ);
-
-    // simple wall-avoid: if desired camera pos collides with an obstacle, pull inward
-    if (collidesCircleRects(desired.x, desired.z, 0.4)){
-      desired.x = targetE.x + offX*0.4;
-      desired.z = targetE.z + offZ*0.4;
-    }
-    camera.position.lerp(desired, Math.min(1, dt*6));
-    const lookAt = new THREE.Vector3(targetE.x, 1.1, targetE.z);
-    camera.lookAt(lookAt);
-  }
-
-  // =====================================================================
-  // Input
-  // =====================================================================
-  const joyZone = document.getElementById('joy-zone');
-  const lookZone = document.getElementById('look-zone');
-  const joyBase = document.getElementById('joystick-base');
-  const joyNub = document.getElementById('joystick-nub');
-
-  let joystick = { active:false, id:null, ox:0, oy:0, dx:0, dy:0 };
-  let look = { active:false, id:null, lastX:0, lastY:0 };
-  let keys = {};
-
-  joyZone.addEventListener('pointerdown', e=>{
-    if (joystick.active) return;
-    joystick.active=true; joystick.id=e.pointerId;
-    joystick.ox=e.clientX; joystick.oy=e.clientY;
-    joyBase.style.display='block';
-    joyBase.style.left=(e.clientX-42)+'px'; joyBase.style.top=(e.clientY-42)+'px';
-    joyNub.style.left='24px'; joyNub.style.top='24px';
-    try{ joyZone.setPointerCapture(e.pointerId); }catch(err){}
-  });
-  joyZone.addEventListener('pointermove', e=>{
-    if (!joystick.active || e.pointerId!==joystick.id) return;
-    let dx=e.clientX-joystick.ox, dy=e.clientY-joystick.oy;
-    const max=40, dist=Math.hypot(dx,dy);
-    if (dist>max){ dx=dx/dist*max; dy=dy/dist*max; }
-    joyNub.style.left=(24+dx)+'px'; joyNub.style.top=(24+dy)+'px';
-    joystick.dx=dx/max; joystick.dy=dy/max;
-  });
-  function joyEnd(e){ if (e.pointerId!==joystick.id) return; joystick.active=false; joystick.dx=0; joystick.dy=0; joyBase.style.display='none'; }
-  joyZone.addEventListener('pointerup', joyEnd);
-  joyZone.addEventListener('pointercancel', joyEnd);
-
-  lookZone.addEventListener('pointerdown', e=>{
-    if (look.active) return;
-    look.active=true; look.id=e.pointerId; look.lastX=e.clientX; look.lastY=e.clientY;
-    try{ lookZone.setPointerCapture(e.pointerId); }catch(err){}
-  });
-  lookZone.addEventListener('pointermove', e=>{
-    if (!look.active || e.pointerId!==look.id) return;
-    const dx=e.clientX-look.lastX, dy=e.clientY-look.lastY;
-    look.lastX=e.clientX; look.lastY=e.clientY;
-    camYaw -= dx*0.006;
-    camPitch = Math.max(0.05, Math.min(0.9, camPitch - dy*0.004));
-  });
-  function lookEnd(e){ if (e.pointerId!==look.id) return; look.active=false; }
-  lookZone.addEventListener('pointerup', lookEnd);
-  lookZone.addEventListener('pointercancel', lookEnd);
-
-  // desktop mouse-drag look works via the same look-zone covering right side;
-  // additionally allow drag from anywhere with right mouse button held
-  window.addEventListener('mousedown', e=>{ if (e.button===2){ look.active=true; look.id=-1; look.lastX=e.clientX; look.lastY=e.clientY; } });
-  window.addEventListener('mousemove', e=>{ if (look.active && look.id===-1){ const dx=e.clientX-look.lastX, dy=e.clientY-look.lastY; look.lastX=e.clientX; look.lastY=e.clientY; camYaw -= dx*0.006; camPitch=Math.max(0.05,Math.min(0.9,camPitch-dy*0.004)); } });
-  window.addEventListener('mouseup', e=>{ if (e.button===2) look.active=false; });
-  window.addEventListener('contextmenu', e=>e.preventDefault());
-
-  let sprintButtonHeld = false;
-  let sprintKeyHeld = false;
-  let crouchToggled = false;
-
-  window.addEventListener('keydown', e=>{
-    const k = e.key.toLowerCase();
-    if (!keys[k] && k==='c') crouchToggled = !crouchToggled;
-    if (k==='shift') sprintKeyHeld = true;
-    keys[k]=true;
-  });
-  window.addEventListener('keyup', e=>{
-    const k = e.key.toLowerCase();
-    if (k==='shift') sprintKeyHeld = false;
-    keys[k]=false;
-  });
-
-  function refreshSprintCrouch(){
-    isCrouching = crouchToggled;
-    isSprinting = (sprintKeyHeld || sprintButtonHeld) && stamina>3 && !isCrouching;
-    document.getElementById('btn-sprint').classList.toggle('active', isSprinting);
-    document.getElementById('btn-crouch').classList.toggle('active', isCrouching);
-  }
-  function setSprint(v){ sprintButtonHeld = v; refreshSprintCrouch(); }
-  function setCrouch(v){ crouchToggled = v; refreshSprintCrouch(); }
-
-  const btnSprint = document.getElementById('btn-sprint');
-  btnSprint.addEventListener('pointerdown', e=>{ e.preventDefault(); setSprint(true); });
-  btnSprint.addEventListener('pointerup', ()=>setSprint(false));
-  btnSprint.addEventListener('pointerleave', ()=>setSprint(false));
-
-  const btnCrouch = document.getElementById('btn-crouch');
-  btnCrouch.addEventListener('click', ()=>setCrouch(!isCrouching));
-
-  const btnDistract = document.getElementById('btn-distract');
-  btnDistract.addEventListener('click', ()=>{
-    if (!running || player.caught) return;
-    noisePings.push({x:player.x, z:player.z, strength:1.6, time:performance.now()});
-    log('You threw a distraction — the Hunter may investigate.', 'log-alert');
-  });
-
-  const btnRescue = document.getElementById('btn-rescue');
-  const rescuePrompt = document.getElementById('rescue-prompt');
-  btnRescue.addEventListener('click', triggerRescue);
-  function triggerRescue(){
-    if (!running || player.caught) return;
-    const jailedMates = mates.filter(m=>m.caught);
-    if (!jailedMates.length) return;
-    const distToJail = Math.hypot(player.x-JAIL.x, player.z-JAIL.z);
-    if (distToJail > JAIL_TRIGGER_R) return;
-    jailedMates.forEach(m=>{
-      m.caught=false; m.anim.captured=false;
-      const p = randomFreePoint(MATE_R);
-      m.x=p.x; m.z=p.z;
-      rescuedCount++;
-    });
-    log('RESCUE! '+jailedMates.length+' crew member(s) freed.', 'log-success');
-  }
-
-  document.getElementById('btn-pause').addEventListener('click', ()=>{
-    if (!running) return;
-    running = false;
-    overlay.style.display='flex'; overlay.className='';
-    document.getElementById('overlay-sub').textContent = 'Paused.';
-    document.getElementById('overlay-stats').style.display='none';
-    btnStart.textContent = 'Resume';
-    pausedForResume = true;
-  });
-
-  // =====================================================================
-  // Hunter AI
-  // =====================================================================
-  function pickPatrolTarget(h){
-    // occasionally bias toward guarding the jail
-    if (Math.random() < 0.22){
-      const a = Math.random()*Math.PI*2;
-      h.target = { x: JAIL.x+Math.cos(a)*5, z: JAIL.z+Math.sin(a)*5 };
-    } else {
-      h.target = randomFreePoint(HUNTER_R);
-    }
-  }
-  function setHunterState(h, state, note){
-    if (state !== lastLoggedHunterState){ lastLoggedHunterState=state; if (note) log(note, state==='chase'?'log-alert':'log-info'); }
-    h.state = state;
-  }
-  function updateHunter(h, dt, now){
-    noisePings = noisePings.filter(p=>now-p.time<4500);
-    const targets = [player, ...mates].filter(t=>!t.caught);
-
-    let seen=null;
-    for (const t of targets){
-      const ddx=t.x-h.x, ddz=t.z-h.z, dist=Math.hypot(ddx,ddz);
-      if (dist < VISION_RANGE){
-        const ang = Math.atan2(ddx,ddz)*180/Math.PI;
-        const diff = Math.abs(((ang-h.facing+540)%360)-180);
-        const rangeMod = (t===player && isCrouching) ? 0.55 : 1;
-        if (diff < VISION_ANGLE && dist < VISION_RANGE*rangeMod && hasLineOfSight(h.x,h.z,t.x,t.z)){ seen=t; break; }
-      }
-    }
-
-    if (seen){
-      setHunterState(h,'chase','Hunter has a visual — closing in!');
-      h.target = seen; h.chaseUntil = now+1200; h.liveTrack = true;
-    } else if (h.liveTrack && now < h.chaseUntil){
-      h.liveTrack = false;
-    } else if (h.state==='chase' && now < h.chaseUntil){
-      // investigating last known point
-    } else {
-      let loudest=null;
-      for (const p of noisePings){
-        const d = Math.hypot(p.x-h.x, p.z-h.z);
-        if (d < NOISE_RANGE*p.strength && (!loudest||p.time>loudest.time)) loudest=p;
-      }
-      if (loudest){
-        setHunterState(h,'chase','Hunter heard something nearby...');
-        h.target = {x:loudest.x, z:loudest.z}; h.chaseUntil=now+3200; h.liveTrack=false;
-        noisePings = noisePings.filter(p=>p!==loudest);
-      } else if (h.state!=='patrol'){
-        setHunterState(h,'patrol','Hunter resumed patrol.');
-        pickPatrolTarget(h);
-      }
-    }
-
-    if (h.state==='patrol' && (!h.target || Math.hypot(h.target.x-h.x,h.target.z-h.z)<1.2)) pickPatrolTarget(h);
-
-    const moved = Math.hypot(h.x-h.lastX, h.z-h.lastZ);
-    if (moved < 0.03){
-      h.stuckT += dt;
-      if (h.stuckT > 2.2){ h.stuckT=0; setHunterState(h,'patrol','Hunter lost the trail.'); pickPatrolTarget(h); h.chaseUntil=0; }
-    } else h.stuckT = 0;
-    h.lastX=h.x; h.lastZ=h.z;
-
-    const tgt = h.target;
-    const ddx=tgt.x-h.x, ddz=tgt.z-h.z, dist=Math.hypot(ddx,ddz);
-    let speedFactor = 0;
-    if (dist>0.1){
-      const spd = (h.state==='chase' ? 5.6 : 3.3) * dt;
-      resolveMove(h, ddx/dist*spd, ddz/dist*spd, HUNTER_R);
-      h.facing = Math.atan2(ddx,ddz)*180/Math.PI;
-      speedFactor = h.state==='chase' ? 1.6 : 0.9;
-    }
-    h.anim.speed = speedFactor;
-    h.anim.crouch = false;
-    h.anim.captured = false;
-
-    for (const t of targets){
-      if (Math.hypot(t.x-h.x, t.z-h.z) < CATCH_DIST) catchTarget(t);
-    }
-  }
-  function catchTarget(t){
-    if (t===player){
-      if (player.caught) return;
-      player.caught=true; player.anim.captured=true;
-      log('You were caught! Dragged to The Jail.', 'log-alert');
-      endRound(false);
-    } else {
-      if (t.caught) return;
-      t.caught=true; t.anim.captured=true;
-      log('A crew member got caught and jailed.', 'log-alert');
-    }
-  }
-
-  // =====================================================================
-  // Teammate AI: wander/hide, flee hunter, occasionally auto-assist rescue
-  // =====================================================================
-  function updateMate(m, dt, now){
-    if (m.caught){
-      m.anim.speed=0; m.anim.crouch=false; m.anim.captured=true;
-      return;
-    }
-    m.anim.captured = false;
-    const distToHunter = Math.hypot(m.x-hunter.x, m.z-hunter.z);
-    const seesHunter = distToHunter < 10 && hasLineOfSight(m.x,m.z,hunter.x,hunter.z);
-
-    if (seesHunter){
-      // flee directly away from hunter
-      const fx = m.x-hunter.x, fz = m.z-hunter.z, d=Math.hypot(fx,fz)||1;
-      const spd = 4.0*dt;
-      resolveMove(m, fx/d*spd, fz/d*spd, MATE_R);
-      m.facing = Math.atan2(fx,fz)*180/Math.PI;
-      m.anim.speed = 1.4;
-      m.wanderT = 0; // force new wander target once safe
-    } else {
-      // occasionally head toward jail to assist a rescue if a teammate is captured & hunter is far
-      const jailedOther = mates.some(o=>o!==m && o.caught);
-      const hunterFar = Math.hypot(hunter.x-JAIL.x,hunter.z-JAIL.z) > 9;
-      if (jailedOther && hunterFar && Math.hypot(m.x-JAIL.x,m.z-JAIL.z) > JAIL_TRIGGER_R*0.8){
-        const ddx=JAIL.x-m.x, ddz=JAIL.z-m.z, dist=Math.hypot(ddx,ddz)||1;
-        const spd = 2.6*dt;
-        resolveMove(m, ddx/dist*spd, ddz/dist*spd, MATE_R);
-        m.facing = Math.atan2(ddx,ddz)*180/Math.PI;
-        m.anim.speed = 0.9;
-      } else if (jailedOther && Math.hypot(m.x-JAIL.x,m.z-JAIL.z) <= JAIL_TRIGGER_R){
-        const jailedMates = mates.filter(o=>o.caught);
-        jailedMates.forEach(o=>{ o.caught=false; o.anim.captured=false; const p=randomFreePoint(MATE_R); o.x=p.x; o.z=p.z; rescuedCount++; });
-        log('A crew member sprung a teammate from the jail!', 'log-success');
-        m.anim.speed=0.2;
-      } else {
-        if (!m.wander || now > m.wanderT){ m.wander = randomFreePoint(MATE_R); m.wanderT = now+3000+Math.random()*3000; }
-        const ddx=m.wander.x-m.x, ddz=m.wander.z-m.z, dist=Math.hypot(ddx,ddz);
-        if (dist>0.15){
-          const spd = 1.9*dt;
-          resolveMove(m, ddx/dist*spd, ddz/dist*spd, MATE_R);
-          m.facing = Math.atan2(ddx,ddz)*180/Math.PI;
-          m.anim.speed = 0.6;
-        } else m.anim.speed = 0.05;
-      }
-    }
-    m.anim.crouch = false;
-  }
-
-  // =====================================================================
-  // New game
-  // =====================================================================
-  const overlay = document.getElementById('overlay');
-  const overlayTitle = document.querySelector('#overlay h1');
-  const overlaySub = document.getElementById('overlay-sub');
-  const overlayStats = document.getElementById('overlay-stats');
-  const statTime = document.getElementById('stat-time');
-  const statRescued = document.getElementById('stat-rescued');
-  const statBest = document.getElementById('stat-best');
-  const btnStart = document.getElementById('btn-start');
-  let pausedForResume = false;
-
-  function initEntitiesOnce(){
-    player = makeEntity('player');
-    mates = [makeEntity('mate'), makeEntity('mate')];
-    hunter = makeEntity('hunter');
-  }
-
-  function newGame(){
-    if (pausedForResume){
-      pausedForResume=false; overlay.style.display='none'; running=true; lastFrameT=performance.now();
-      const myId = gameId;
-      rafHandle = requestAnimationFrame(t=>tick(t,myId));
-      return;
-    }
-    gameId++;
-    const myId = gameId;
-    if (rafHandle) cancelAnimationFrame(rafHandle);
-    if (!player) initEntitiesOnce();
-
-    const pS = randomFreePoint(PLAYER_R); player.x=pS.x; player.z=pS.z; player.caught=false; player.anim={speed:0,phase:0,crouch:false,captured:false};
-    mates.forEach(m=>{ const s=randomFreePoint(MATE_R); m.x=s.x; m.z=s.z; m.caught=false; m.wander=null; m.wanderT=0; m.anim={speed:0,phase:Math.random()*6,crouch:false,captured:false}; });
-    const hS = randomFreePoint(HUNTER_R); hunter.x=hS.x; hunter.z=hS.z; hunter.state='patrol'; hunter.target={x:0,z:0}; hunter.chaseUntil=0; hunter.liveTrack=false; hunter.lastX=hS.x; hunter.lastZ=hS.z; hunter.stuckT=0; hunter.anim={speed:0,phase:0,crouch:false,captured:false};
-
-    camYaw = Math.atan2(player.x, player.z)+Math.PI;
-    stamina=100; isSprinting=false; isCrouching=false;
-    rescuedCount=0; noisePings=[]; lastLoggedHunterState=null;
-    feed.innerHTML=''; keys={};
-
-    log('Round started. Survive '+ROUND_LENGTH+'s.', 'log-info');
-
-    overlay.style.display='none';
-    running=true; roundStart=performance.now(); lastFrameT=roundStart;
-    rafHandle = requestAnimationFrame(t=>tick(t,myId));
-  }
-  btnStart.addEventListener('click', newGame);
-
-  // =====================================================================
-  // Main loop
-  // =====================================================================
-  let lastFrameT=0;
-  function tick(now, myId){
-    if (myId!==gameId || !running) return;
-    const dt = Math.min(0.05,(now-lastFrameT)/1000);
-    lastFrameT = now;
-    elapsed = (now-roundStart)/1000;
-    const remaining = ROUND_LENGTH-elapsed;
-    document.getElementById('timer-val').textContent = fmtTime(remaining);
-
-    if (!player.caught){
-      let dx=0, dz=0;
-      if (joystick.active){ dx=joystick.dx; dz=joystick.dy; }
-      else {
-        if (keys['arrowleft']||keys['a']) dx-=1;
-        if (keys['arrowright']||keys['d']) dx+=1;
-        if (keys['arrowup']||keys['w']) dz-=1;
-        if (keys['arrowdown']||keys['s']) dz+=1;
-        const mag=Math.hypot(dx,dz); if (mag>1){ dx/=mag; dz/=mag; }
-      }
-      refreshSprintCrouch();
-
-      const moving = Math.hypot(dx,dz) > 0.08;
-      const sprint = isSprinting && moving && stamina>0.5;
-      const mult = sprint ? SPRINT_MULT : (isCrouching ? CROUCH_MULT : 1);
-      const speed = BASE_SPEED*mult*dt;
-
-      if (moving){
-        // movement relative to camera yaw (third-person control)
-        const fwdX = Math.sin(camYaw), fwdZ = Math.cos(camYaw);
-        const rightX = Math.sin(camYaw+Math.PI/2), rightZ = Math.cos(camYaw+Math.PI/2);
-        const mvX = (fwdX*(-dz) + rightX*dx);
-        const mvZ = (fwdZ*(-dz) + rightZ*dx);
-        const mvLen = Math.hypot(mvX,mvZ)||1;
-        resolveMove(player, mvX/mvLen*speed, mvZ/mvLen*speed, PLAYER_R);
-        const targetFacing = Math.atan2(mvX,mvZ)*180/Math.PI;
-        let diff = ((targetFacing-player.facing+540)%360)-180;
-        player.facing += diff*Math.min(1,dt*10);
-      }
-
-      if (sprint){
-        stamina = Math.max(0, stamina-20*dt);
-        noisePings.push({x:player.x,z:player.z,strength:1,time:now});
-        if (stamina<=0.5) setSprint(false);
-      } else {
-        stamina = Math.min(100, stamina + (isCrouching?4:9)*dt);
-      }
-      document.getElementById('stamina-bar').style.width = stamina+'%';
-
-      player.anim.speed = !moving ? 0 : (sprint ? 1.7 : (isCrouching?0.35:0.85));
-      player.anim.crouch = isCrouching;
-    }
-
-    mates.forEach(m=>updateMate(m,dt,now));
-    updateHunter(hunter,dt,now);
-
-    // animate all
-    [player,...mates,hunter].forEach(e=>{
-      animateHumanoid(e.ch, dt, e.anim);
-      e.ch.group.position.set(e.x, 0, e.z);
-      let targetRot = (e===player) ? player.facing : (e.facing||0);
-      e.ch.group.rotation.y += ((targetRot*Math.PI/180 - e.ch.group.rotation.y + Math.PI*3)%(Math.PI*2) - Math.PI) * Math.min(1,dt*8);
-    });
-
-    updateCamera(dt, player, isSprinting);
-
-    // HUD: detection status
-    const exposed = hunter.state==='chase' && hunter.liveTrack;
-    const detectEl = document.getElementById('detect-val');
-    if (exposed){ detectEl.textContent='⚠ SPOTTED'; detectEl.style.color='#fc8181'; }
-    else if (hunter.state==='chase'){ detectEl.textContent='INVESTIGATING'; detectEl.style.color='#f6ad55'; }
-    else { detectEl.textContent='HIDDEN'; detectEl.style.color='#48bb78'; }
-
-    const jailedCount = mates.filter(m=>m.caught).length;
-    const freeCount = mates.length - jailedCount;
-    document.getElementById('crew-val').textContent = freeCount+' / '+jailedCount;
-
-    const nearJail = Math.hypot(player.x-JAIL.x,player.z-JAIL.z) < JAIL_TRIGGER_R;
-    rescuePrompt.style.display = (nearJail && jailedCount>0 && !player.caught) ? 'block' : 'none';
-    btnRescue.style.display = (jailedCount>0 && !player.caught) ? 'flex' : 'none';
-
-    debugTick++;
-    document.getElementById('debug-bar').textContent =
-      'running:'+running+' pos:'+player.x.toFixed(1)+','+player.z.toFixed(1)+
-      ' hunter:'+hunter.state+(hunter.liveTrack?'*':'')+' input:'+ (joystick.active?'joy':'') +
-      (keys['w']||keys['a']||keys['s']||keys['d']?'keys':'') +' f#'+debugTick;
-
-    if (remaining<=0 && !player.caught){ endRound(true); return; }
-    if (myId===gameId && running) rafHandle = requestAnimationFrame(t=>tick(t,myId));
-  }
-
-  function endRound(won){
-    running=false;
-    if (rafHandle) cancelAnimationFrame(rafHandle);
-    const survived = Math.min(elapsed, ROUND_LENGTH);
-    if (won || survived>(bestTime||0)) saveBest(survived);
-    overlay.style.display='flex';
-    overlay.className = won?'win':'lose';
-    overlayTitle.textContent = won?'YOU SURVIVED':'CAUGHT!';
-    overlaySub.textContent = won ? 'You outlasted the Hunter for the full round.' : 'The Hunter caught you before time ran out.';
-    overlayStats.style.display='flex';
-    statTime.textContent = fmtTime(survived);
-    statRescued.textContent = rescuedCount;
-    statBest.textContent = fmtTime(bestTime||0);
-    btnStart.textContent = 'Play Again';
-    log(won?'Round complete — you made it!':'Round over.', won?'log-success':'log-alert');
-  }
-
-  // =====================================================================
-  // Resize + safety nets
-  // =====================================================================
-  window.addEventListener('resize', ()=>{
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-  document.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
-  document.addEventListener('gesturestart', e=>e.preventDefault());
-
-  // Render loop is driven by tick() while running; keep rendering even
-  // when paused so the scene doesn't go black behind the overlay.
-  function renderOnly(){ renderer.render(scene, camera); requestAnimationFrame(renderOnly); }
-  requestAnimationFrame(renderOnly);
-
-  loadBest();
-  initEntitiesOnce();
-  const startSpawn = randomFreePoint(PLAYER_R);
-  player.x=startSpawn.x; player.z=startSpawn.z;
-  camera.position.set(player.x, 3, player.z+8);
-  camera.lookAt(player.x,1,player.z);
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const host=$('host'),renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;host.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x02050a);scene.fog=new THREE.FogExp2(0x07101a,.022);
+const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,250);
+scene.add(new THREE.HemisphereLight(0x6b84b8,0x071018,.7));
+const moon=new THREE.DirectionalLight(0x93b4ef,.45);moon.position.set(-25,35,-20);moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);scene.add(moon);
+
+const HALF=38,obstacles=[],occluders=[],streetLights=[];
+const mat=(c,r=.85,m=.05)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+function box(x,z,w,d,h,c){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c));mesh.position.set(x,h/2,z);mesh.castShadow=mesh.receiveShadow=true;scene.add(mesh);obstacles.push({x:x-w/2,z:z-d/2,w,d});occluders.push(mesh);return mesh}
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(90,90),mat(0x111820,1));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+for(let i=-3;i<=3;i++){const road=new THREE.Mesh(new THREE.PlaneGeometry(7,84),mat(0x161d26,1));road.rotation.x=-Math.PI/2;road.position.set(i*12,.01,0);scene.add(road)}
+[
+[-25,-22,14,16,9,0x1b2633],[24,-22,15,16,10,0x202c3b],[-25,22,14,16,8,0x1a2430],[24,22,15,16,11,0x222f40],
+[0,-28,10,8,7,0x18222e],[0,28,11,8,12,0x263245],[-8,8,7,10,6,0x202938],[9,-7,8,9,7,0x1d2835]
+].forEach(v=>box(...v));
+[[-7,-2,.4,12,1.5,0x3a4350],[7,2,.4,12,1.5,0x3a4350],[-15,5,2.3,1.5,1.3,0x2f4a33],[15,-5,2.3,1.5,1.3,0x2f4a33]].forEach(v=>box(...v));
+
+function lightPost(x,z){
+ const pole=new THREE.Mesh(new THREE.CylinderGeometry(.1,.12,4.2,8),mat(0x16191f));pole.position.set(x,2.1,z);pole.castShadow=true;scene.add(pole);
+ const bulb=new THREE.Mesh(new THREE.SphereGeometry(.18,10,10),new THREE.MeshStandardMaterial({color:0xffdf9d,emissive:0xffb84e,emissiveIntensity:2}));bulb.position.set(x,4.1,z);scene.add(bulb);
+ const l=new THREE.PointLight(0xffb35c,1.15,16,2);l.position.set(x,4,z);scene.add(l);streetLights.push({x,z,r:8});
+}
+[[-15,0],[15,0],[0,-15],[0,15],[-28,5],[28,-5],[-10,28],[10,-28]].forEach(p=>lightPost(...p));
+
+const jail={x:0,z:0,r:3.5};const jf=new THREE.Mesh(new THREE.CircleGeometry(jail.r,32),mat(0x1b1507));jf.rotation.x=-Math.PI/2;jf.position.y=.02;scene.add(jf);
+for(let i=0;i<18;i++){const a=i/18*Math.PI*2;if(a>.25&&a<.95)continue;const b=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.7,6),mat(0x4a505b,.4,.7));b.position.set(Math.cos(a)*jail.r,1.35,Math.sin(a)*jail.r);scene.add(b)}
+const jailLight=new THREE.SpotLight(0xffc45a,2.2,15,Math.PI/7,.45);jailLight.position.set(0,8,0);jailLight.target.position.set(0,0,0);scene.add(jailLight,jailLight.target);
+
+function civilian(color,skin=0xd7a374,hair=0x2a1a13){
+ const g=new THREE.Group(),cloth=mat(color,.8),dark=mat(0x151820,.9),skinM=mat(skin,.85),hairM=mat(hair,.95);
+ const root=new THREE.Group();root.position.y=1;g.add(root);
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.23,.55,4,8),cloth);torso.position.y=.43;torso.castShadow=true;root.add(torso);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.2,12,12),skinM);head.position.y=.93;head.castShadow=true;root.add(head);
+ const hairMesh=new THREE.Mesh(new THREE.SphereGeometry(.205,12,12,0,Math.PI*2,0,Math.PI/2.2),hairM);hairMesh.position.y=.98;root.add(hairMesh);
+ const limbs={};
+ [['armL',-.31,.68],['armR',.31,.68],['legL',-.13,.1],['legR',.13,.1]].forEach(([n,x,y])=>{const p=new THREE.Group();p.position.set(x,y,0);root.add(p);const h=n.startsWith('arm')?.56:.64;const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(.075,h,3,6),n.startsWith('arm')?cloth:dark);mesh.position.y=-h/2;mesh.castShadow=true;p.add(mesh);limbs[n]=p});
+ scene.add(g);return{g,root,limbs,cloth,dark,phase:0}
+}
+function animate(c,dt,speed,crouch,caught){
+ c.phase+=dt*(speed>1?9:5.5)*Math.max(.15,speed);const s=Math.sin(c.phase),amp=crouch?.28:(.18+Math.min(speed,2)*.28);
+ c.limbs.armL.rotation.x=s*amp;c.limbs.armR.rotation.x=-s*amp;c.limbs.legL.rotation.x=-s*amp;c.limbs.legR.rotation.x=s*amp;
+ c.root.position.y=(crouch?.72:1)+Math.abs(s)*.035;c.root.rotation.x=crouch?.18:Math.min(speed,2)*.045;c.g.scale.y=caught?.85:1
+}
+function entity(role,color){return{role,char:civilian(color),x:0,z:0,r:.32,facing:0,caught:false,state:'patrol',target:null,lastSeen:null,stateUntil:0,detect:0,speed:0,crouch:false}}
+
+let player=entity('player',0x2563eb),hunter=entity('hunter',0x8b1d2c),mates=[entity('mate',0x1f8f5f),entity('mate',0x2aa66f),entity('mate',0x269c67)];
+const entities=[player,hunter,...mates],ROUND=90;
+let running=false,startTime=0,last=0,stamina=100,suspicion=0,rescues=0,noises=[],keys={},input={x:0,y:0,sprint:false,crouch:false},camYaw=Math.PI,camPitch=.3;
+
+function blocked(x,z,r){if(Math.abs(x)>HALF-r||Math.abs(z)>HALF-r)return true;for(const o of obstacles){const cx=Math.max(o.x,Math.min(x,o.x+o.w)),cz=Math.max(o.z,Math.min(z,o.z+o.d));if((x-cx)**2+(z-cz)**2<r*r)return true}return false}
+function move(e,dx,dz){if(!blocked(e.x+dx,e.z,e.r))e.x+=dx;if(!blocked(e.x,e.z+dz,e.r))e.z+=dz}
+function free(avoid=[]){for(let i=0;i<300;i++){const p={x:(Math.random()*2-1)*(HALF-3),z:(Math.random()*2-1)*(HALF-3)};if(!blocked(p.x,p.z,.4)&&avoid.every(a=>Math.hypot(p.x-a.x,p.z-a.z)>8))return p}return{x:0,z:30}}
+function rayClear(a,b){
+ const dir=new THREE.Vector3(b.x-a.x,1,b.z-a.z),len=Math.hypot(b.x-a.x,b.z-a.z);dir.normalize();
+ const ray=new THREE.Raycaster(new THREE.Vector3(a.x,1.1,a.z),dir,0,len);return ray.intersectObjects(occluders,false).length===0
+}
+function lightingAt(e){let v=.15;for(const l of streetLights){const d=Math.hypot(e.x-l.x,e.z-l.z);if(d<l.r)v=Math.max(v,1-d/l.r)}return v}
+function visibilityScore(target){
+ const d=Math.hypot(target.x-hunter.x,target.z-hunter.z);if(d>20)return 0;
+ const targetAngle=Math.atan2(target.x-hunter.x,target.z-hunter.z),face=hunter.facing*Math.PI/180,diff=Math.abs(Math.atan2(Math.sin(targetAngle-face),Math.cos(targetAngle-face)));
+ if(diff>1.25||!rayClear(hunter,target))return 0;
+ let score=(1-d/20)*(1-diff/1.25);score*=.45+.75*lightingAt(target);if(target.crouch)score*=.48;if(target.speed>1.2)score*=1.35;return Math.max(0,score)
+}
+function fmt(s){s=Math.max(0,Math.floor(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+
+function reset(){
+ const ps=free();player.x=ps.x;player.z=ps.z;player.caught=false;mates.forEach(m=>{const p=free([hunter]);m.x=p.x;m.z=p.z;m.caught=false;m.state='roam';m.target=free()});
+ const hp=free([player,...mates]);hunter.x=hp.x;hunter.z=hp.z;hunter.state='patrol';hunter.target=free([player]);hunter.lastSeen=null;hunter.stateUntil=0;
+ stamina=100;suspicion=0;rescues=0;noises=[];camYaw=Math.PI;running=true;startTime=performance.now();last=startTime;$('overlay').style.display='none';requestAnimationFrame(loop)
+}
+function updatePlayer(dt){
+ let dx=input.x,dy=input.y;if(keys.w||keys.arrowup)dy--;if(keys.s||keys.arrowdown)dy++;if(keys.a||keys.arrowleft)dx--;if(keys.d||keys.arrowright)dx++;
+ const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}player.crouch=input.crouch||keys.c;const sprint=(input.sprint||keys.shift)&&!player.crouch&&stamina>1&&l>.08,sp=player.crouch?2.2:sprint?7.8:4.5;
+ if(l>.08){const fx=Math.sin(camYaw),fz=Math.cos(camYaw),rx=Math.sin(camYaw+Math.PI/2),rz=Math.cos(camYaw+Math.PI/2),mx=fx*(-dy)+rx*dx,mz=fz*(-dy)+rz*dx,ml=Math.hypot(mx,mz)||1;move(player,mx/ml*sp*dt,mz/ml*sp*dt);player.facing=Math.atan2(mx,mz)*180/Math.PI;player.speed=sprint?1.8:player.crouch?.35:.9;if(sprint&&Math.random()<dt*8)noises.push({x:player.x,z:player.z,life:.8,strength:1})}else player.speed=0;
+ stamina=sprint?Math.max(0,stamina-24*dt):Math.min(100,stamina+12*dt)
+}
+function updateMate(m,dt,now){
+ if(m.caught){m.speed=0;return}const dh=Math.hypot(m.x-hunter.x,m.z-hunter.z);
+ if(dh<11&&rayClear(m,hunter)){const a=Math.atan2(m.x-hunter.x,m.z-hunter.z);m.target={x:m.x+Math.sin(a)*12,z:m.z+Math.cos(a)*12};m.state='flee';m.stateUntil=now+2200}
+ else if(!m.target||Math.hypot(m.x-m.target.x,m.z-m.target.z)<1||now>m.stateUntil){m.state='roam';m.target=free([hunter]);m.stateUntil=now+4000+Math.random()*3000}
+ const a=Math.atan2(m.target.x-m.x,m.target.z-m.z),sp=m.state==='flee'?5.7:2.8;move(m,Math.sin(a)*sp*dt,Math.cos(a)*sp*dt);m.facing=a*180/Math.PI;m.speed=m.state==='flee'?1.4:.55
+}
+function updateHunter(dt,now){
+ let seen=null,best=0;for(const t of [player,...mates])if(!t.caught){const s=visibilityScore(t);if(s>best){best=s;seen=t}}
+ if(seen&&best>.035){suspicion=Math.min(100,suspicion+best*82*dt);hunter.lastSeen={x:seen.x,z:seen.z};if(suspicion>70){hunter.state='chase';hunter.target=seen;hunter.stateUntil=now+1800}else{hunter.state='alert';hunter.target=hunter.lastSeen;hunter.stateUntil=now+1200}}
+ else suspicion=Math.max(0,suspicion-(hunter.state==='search'?8:15)*dt);
+ if(hunter.state!=='chase'){const heard=noises.find(n=>n.life>0&&Math.hypot(n.x-hunter.x,n.z-hunter.z)<17*n.strength);if(heard){hunter.state='investigate';hunter.target={x:heard.x,z:heard.z};hunter.stateUntil=now+2600;heard.life=0}}
+ if((hunter.state==='chase'||hunter.state==='alert')&&seen==null&&now>hunter.stateUntil){hunter.state='search';hunter.target=hunter.lastSeen||free();hunter.stateUntil=now+3500}
+ if(hunter.state==='search'&&now>hunter.stateUntil){hunter.state='patrol';hunter.target=free([player])}
+ if(!hunter.target||Math.hypot(hunter.x-hunter.target.x,hunter.z-hunter.target.z)<1){if(hunter.state==='patrol')hunter.target=free([player]);else if(hunter.state==='search')hunter.target={x:(hunter.lastSeen?.x||hunter.x)+(Math.random()*8-4),z:(hunter.lastSeen?.z||hunter.z)+(Math.random()*8-4)}}
+ const a=Math.atan2(hunter.target.x-hunter.x,hunter.target.z-hunter.z),sp=hunter.state==='chase'?6.1:hunter.state==='alert'?4.7:hunter.state==='investigate'?4.1:3;move(hunter,Math.sin(a)*sp*dt,Math.cos(a)*sp*dt);hunter.facing=a*180/Math.PI;hunter.speed=hunter.state==='chase'?1.6:.7;
+ for(const t of [player,...mates])if(!t.caught&&Math.hypot(t.x-hunter.x,t.z-hunter.z)<.85){if(t===player){running=false;$('overlay').style.display='flex';$('overlay').querySelector('h1').textContent='CAUGHT';$('overlay').querySelector('p').textContent='The Hunter tracked you down.'}else{t.caught=true;t.x=jail.x+(Math.random()*2-1)*1.4;t.z=jail.z+(Math.random()*2-1)*1.4}}
+}
+function updateCamera(dt){
+ const dist=5.6,ox=Math.sin(camYaw)*dist*Math.cos(camPitch),oz=Math.cos(camYaw)*dist*Math.cos(camPitch),oy=2.2+Math.sin(camPitch)*dist,desired=new THREE.Vector3(player.x+ox,oy,player.z+oz);if(blocked(desired.x,desired.z,.4)){desired.x=player.x+ox*.35;desired.z=player.z+oz*.35}camera.position.lerp(desired,Math.min(1,dt*7));camera.lookAt(player.x,1.15,player.z)
+}
+function flashlight(){
+ if(!hunter.flash){const cone=new THREE.Mesh(new THREE.ConeGeometry(5,14,32,1,true),new THREE.MeshBasicMaterial({color:0xffe0a3,transparent:true,opacity:.08,side:THREE.DoubleSide,depthWrite:false}));cone.rotation.x=Math.PI/2;hunter.char.g.add(cone);cone.position.set(0,1,-7);hunter.flash=cone}
+}
+flashlight();
+function loop(now){
+ if(!running)return;const dt=Math.min(.04,(now-last)/1000);last=now;const elapsed=(now-startTime)/1000;
+ updatePlayer(dt);mates.forEach(m=>updateMate(m,dt,now));updateHunter(dt,now);noises.forEach(n=>n.life-=dt);noises=noises.filter(n=>n.life>0);updateCamera(dt);
+ entities.forEach(e=>{animate(e.char,dt,e.speed,e.crouch,e.caught);e.char.g.position.set(e.x,0,e.z);e.char.g.rotation.y+=(e.facing*Math.PI/180-e.char.g.rotation.y)*Math.min(1,dt*9)});
+ $('timer').textContent=fmt(ROUND-elapsed);$('stamFill').style.width=stamina+'%';$('stamVal').textContent=Math.round(stamina);$('detectFill').style.width=suspicion+'%';$('detectVal').textContent=Math.round(suspicion)+'%';
+ const free=mates.filter(m=>!m.caught).length;$('crew').textContent=free+' FREE · '+(mates.length-free)+' CAUGHT';const status=suspicion>70?'SPOTTED':suspicion>10?'SUSPICIOUS':'HIDDEN';$('status').textContent=status;$('status').className='status '+(status==='SPOTTED'?'spotted':status==='SUSPICIOUS'?'suspicious':'');
+ $('prompt').textContent=Math.hypot(player.x-jail.x,player.z-jail.z)<4.5&&mates.some(m=>m.caught)?'PRESS RESCUE TO FREE YOUR FRIENDS':'';
+ if(elapsed>=ROUND){running=false;$('overlay').style.display='flex';$('overlay').querySelector('h1').textContent='YOU SURVIVED';$('overlay').querySelector('p').textContent='You escaped the Hunter and survived the night.';return}
+ requestAnimationFrame(loop)
+}
+function rescue(){if(Math.hypot(player.x-jail.x,player.z-jail.z)>4.5)return;mates.filter(m=>m.caught).forEach(m=>{m.caught=false;const p=free([hunter]);m.x=p.x;m.z=p.z;rescues++})}
+$('startBtn').onclick=reset;$('noiseBtn').onclick=()=>noises.push({x:player.x,z:player.z,life:4,strength:2.2});$('sodaBtn').onclick=()=>stamina=100;$('rescueBtn').onclick=rescue;
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='e')rescue();if(e.key.toLowerCase()==='q')noises.push({x:player.x,z:player.z,life:4,strength:2.2})});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+let mp=null,o={x:0,y:0};$('moveZone').onpointerdown=e=>{mp=e.pointerId;o={x:e.clientX,y:e.clientY};$('stick').style.display='block';$('stick').style.left=e.clientX+'px';$('stick').style.top=e.clientY+'px'};$('moveZone').onpointermove=e=>{if(e.pointerId!==mp)return;let dx=e.clientX-o.x,dy=e.clientY-o.y,d=Math.hypot(dx,dy),m=50;if(d>m){dx=dx/d*m;dy=dy/d*m}input.x=dx/m;input.y=dy/m;$('knob').style.left=54+dx+'px';$('knob').style.top=54+dy+'px'};function mr(){mp=null;input.x=input.y=0;$('stick').style.display='none'}$('moveZone').onpointerup=mr;$('moveZone').onpointercancel=mr;
+let lp=null,ll={x:0,y:0};$('lookZone').onpointerdown=e=>{lp=e.pointerId;ll={x:e.clientX,y:e.clientY}};$('lookZone').onpointermove=e=>{if(e.pointerId!==lp)return;camYaw-=(e.clientX-ll.x)*.006;camPitch=Math.max(.05,Math.min(.85,camPitch-(e.clientY-ll.y)*.004));ll={x:e.clientX,y:e.clientY}};$('lookZone').onpointerup=()=>lp=null;
+function hold(b,on,off){b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off}hold($('sprintBtn'),()=>input.sprint=true,()=>input.sprint=false);$('crouchBtn').onclick=()=>input.crouch=!input.crouch;
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+(function render(){renderer.render(scene,camera);requestAnimationFrame(render)})();
 })();
 </script>
 </body>
