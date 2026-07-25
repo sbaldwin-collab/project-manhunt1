@@ -400,6 +400,7 @@
       anim:{ speed:0, phase:0, crouch:false, captured:false },
       // AI fields
       state:'patrol', target:null, chaseUntil:0, liveTrack:false,
+      lastKnownTarget:null,
       wanderT:0, lastX:0, lastZ:0, stuckT:0, hideT:0
     };
   }
@@ -414,6 +415,10 @@
       tries++;
     } while (collidesCircleRects(x,z,radius) && tries < 30);
     return {x,z};
+  }
+
+  function isValidPoint(target){
+    return !!target && Number.isFinite(target.x) && Number.isFinite(target.z);
   }
 
   function collidesCircleRects(x,z,r){
@@ -459,6 +464,7 @@
   }
 
   function visionStrength(observer,target){
+    if (!isValidPoint(observer) || !isValidPoint(target) || target.caught) return 0;
     const dx=target.x-observer.x, dz=target.z-observer.z;
     const dist=Math.hypot(dx,dz);
     if (dist>VISION_RANGE || !hasLineOfSight(observer.x,observer.z,target.x,target.z)) return 0;
@@ -488,7 +494,6 @@
   let stamina=100, isSprinting=false, isCrouching=false;
   let noisePings=[];
   let detectionLevel=0;
-  let lastKnownPlayer=null;
   let lastLoggedHunterState=null;
   let debugTick=0;
 
@@ -661,6 +666,7 @@
   // Hunter AI
   // =====================================================================
   function pickPatrolTarget(h){
+    if (!h) return;
     // occasionally bias toward guarding the jail
     if (Math.random() < 0.22){
       const a = Math.random()*Math.PI*2;
@@ -674,8 +680,9 @@
     h.state = state;
   }
   function updateHunter(h, dt, now){
-    noisePings = noisePings.filter(p=>now-p.time<4500);
-    const targets = [player, ...mates].filter(t=>!t.caught);
+    if (!h || !isValidPoint(h)) return;
+    noisePings = noisePings.filter(p=>isValidPoint(p) && Number.isFinite(p.time) && now-p.time<4500);
+    const targets = [player, ...(Array.isArray(mates)?mates:[])].filter(t=>isValidPoint(t) && !t.caught);
 
     let seen=null;
     let strongest=0;
@@ -687,7 +694,6 @@
     if (seen && strongest>0.02){
       if (seen===player){
         detectionLevel=Math.min(100,detectionLevel+strongest*95*dt);
-        lastKnownPlayer={x:player.x,z:player.z};
       }
     } else {
       detectionLevel=Math.max(0,detectionLevel-(h.state==='chase'?7:18)*dt);
@@ -696,12 +702,15 @@
     if (seen && (seen!==player || detectionLevel>=65)){
       setHunterState(h,'chase','Hunter has a visual — closing in!');
       h.target = seen;
+      h.lastKnownTarget = {x:seen.x, z:seen.z};
       h.chaseUntil = now+1500;
       h.liveTrack = true;
-      if (seen===player) lastKnownPlayer={x:player.x,z:player.z};
     } else if (h.liveTrack && now < h.chaseUntil){
+      // Stop retaining the live entity once sight is lost; investigate its last seen position.
       h.liveTrack = false;
-      if (lastKnownPlayer) h.target={x:lastKnownPlayer.x,z:lastKnownPlayer.z};
+      h.target = isValidPoint(h.lastKnownTarget)
+        ? {x:h.lastKnownTarget.x, z:h.lastKnownTarget.z}
+        : null;
     } else if (h.state==='chase' && now < h.chaseUntil){
       // investigating last known point
     } else {
@@ -712,7 +721,8 @@
       }
       if (loudest){
         setHunterState(h,'chase','Hunter heard something nearby...');
-        h.target = {x:loudest.x, z:loudest.z}; h.chaseUntil=now+3200; h.liveTrack=false;
+        h.target = {x:loudest.x, z:loudest.z}; h.lastKnownTarget={x:loudest.x,z:loudest.z};
+        h.chaseUntil=now+3200; h.liveTrack=false;
         noisePings = noisePings.filter(p=>p!==loudest);
       } else if (h.state!=='patrol'){
         setHunterState(h,'patrol','Hunter resumed patrol.');
@@ -729,7 +739,17 @@
     } else h.stuckT = 0;
     h.lastX=h.x; h.lastZ=h.z;
 
+    if (!isValidPoint(h.target) || (h.liveTrack && h.target.caught)){
+      h.liveTrack=false;
+      setHunterState(h,'patrol','Hunter lost the trail.');
+      pickPatrolTarget(h);
+    }
+
     const tgt = h.target;
+    if (!isValidPoint(tgt)){
+      h.anim.speed=0; h.anim.crouch=false; h.anim.captured=false;
+      return;
+    }
     const ddx=tgt.x-h.x, ddz=tgt.z-h.z, dist=Math.hypot(ddx,ddz);
     let speedFactor = 0;
     if (dist>0.1){
@@ -868,12 +888,12 @@
 
     const pS = randomFreePoint(PLAYER_R); player.x=pS.x; player.z=pS.z; player.caught=false; player.anim={speed:0,phase:0,crouch:false,captured:false};
     mates.forEach(m=>{ const s=randomFreePoint(MATE_R); m.x=s.x; m.z=s.z; m.caught=false; m.wander=null; m.wanderT=0; m.anim={speed:0,phase:Math.random()*6,crouch:false,captured:false}; });
-    const hS = randomFreePoint(HUNTER_R); hunter.x=hS.x; hunter.z=hS.z; hunter.state='patrol'; hunter.target={x:0,z:0}; hunter.chaseUntil=0; hunter.liveTrack=false; hunter.lastX=hS.x; hunter.lastZ=hS.z; hunter.stuckT=0; hunter.anim={speed:0,phase:0,crouch:false,captured:false};
+    const hS = randomFreePoint(HUNTER_R); hunter.x=hS.x; hunter.z=hS.z; hunter.state='patrol'; hunter.target={x:0,z:0}; hunter.chaseUntil=0; hunter.liveTrack=false; hunter.lastKnownTarget=null; hunter.lastX=hS.x; hunter.lastZ=hS.z; hunter.stuckT=0; hunter.anim={speed:0,phase:0,crouch:false,captured:false};
 
     camYaw = Math.atan2(player.x, player.z)+Math.PI;
     stamina=100; isSprinting=false; isCrouching=false;
     pausedAt=0;
-    rescuedCount=0; noisePings=[]; detectionLevel=0; lastKnownPlayer=null; lastLoggedHunterState=null;
+    rescuedCount=0; noisePings=[]; detectionLevel=0; lastLoggedHunterState=null;
     feed.innerHTML=''; keys={};
 
     log('Round started. Survive '+ROUND_LENGTH+'s.', 'log-info');
