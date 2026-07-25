@@ -648,6 +648,7 @@
 
   document.getElementById('btn-pause').addEventListener('click', ()=>{
     if (!running) return;
+    pausedAt = performance.now();
     running = false;
     overlay.style.display='flex'; overlay.className='';
     document.getElementById('overlay-sub').textContent = 'Paused.';
@@ -819,6 +820,7 @@
   const statBest = document.getElementById('stat-best');
   const btnStart = document.getElementById('btn-start');
   let pausedForResume = false;
+  let pausedAt = 0;
 
   function initEntitiesOnce(){
     player = makeEntity('player');
@@ -851,7 +853,9 @@
 
   function newGame(){
     if (pausedForResume){
-      pausedForResume=false; overlay.style.display='none'; running=true; lastFrameT=performance.now();
+      const resumedAt = performance.now();
+      if (pausedAt > 0) roundStart += resumedAt-pausedAt;
+      pausedAt=0; pausedForResume=false; overlay.style.display='none'; running=true; lastFrameT=resumedAt;
       const myId = gameId;
       rafHandle = requestAnimationFrame(t=>tick(t,myId));
       return;
@@ -868,6 +872,7 @@
 
     camYaw = Math.atan2(player.x, player.z)+Math.PI;
     stamina=100; isSprinting=false; isCrouching=false;
+    pausedAt=0;
     rescuedCount=0; noisePings=[]; detectionLevel=0; lastKnownPlayer=null; lastLoggedHunterState=null;
     feed.innerHTML=''; keys={};
 
