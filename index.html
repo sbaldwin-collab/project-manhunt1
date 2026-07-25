@@ -946,6 +946,7 @@
     });
 
     updateCamera(dt, player, isSprinting);
+    renderer.render(scene, camera);
 
     // HUD: progressive vision / suspicion
     const detectEl = document.getElementById('detect-val');
@@ -1007,11 +1008,6 @@
   document.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
   document.addEventListener('gesturestart', e=>e.preventDefault());
 
-  // Render loop is driven by tick() while running; keep rendering even
-  // when paused so the scene doesn't go black behind the overlay.
-  function renderOnly(){ renderer.render(scene, camera); requestAnimationFrame(renderOnly); }
-  requestAnimationFrame(renderOnly);
-
   loadBest();
   initEntitiesOnce();
   attachHunterFlashlight();
@@ -1019,6 +1015,7 @@
   player.x=startSpawn.x; player.z=startSpawn.z;
   camera.position.set(player.x, 3, player.z+8);
   camera.lookAt(player.x,1,player.z);
+  renderer.render(scene, camera);
 })();
 </script>
 </body>
