@@ -8,6 +8,20 @@ This README is written for whoever picks this codebase up next — a CTO, a seni
 
 ---
 
+## Project status: this build's role has changed
+
+The client has reviewed this browser build and — correctly — rejected its visual fidelity for a commercial pitch. **PROJECT MANHUNT is now moving to a photorealistic Unreal Engine 5 vertical slice**, planned in full in [`docs/`](docs/).
+
+This does not make the browser build obsolete. Its role going forward is:
+
+- **The proven gameplay/systems reference.** Every rule in `docs/HUNTER_AI_SPEC.md`, `docs/ANIMATION_SPEC.md`, and `docs/NYC_LEVEL_DESIGN.md` was extracted from the working code in `src/` — this is the design source of truth the Unreal build is translated from, not a discarded prototype.
+- **The regression target.** Anyone building the Unreal AI, camera, or movement systems can play this build in a browser with zero setup to check "does this feel like it's supposed to."
+- **No longer the target of visual polish work.** Further presentation-quality effort goes into the Unreal build; this repository's Three.js code stays functionally maintained but is not being pushed toward AAA visual fidelity — that was never achievable in this stack, and isn't the goal anymore.
+
+**Start here for the Unreal migration:** [`docs/UNREAL_MIGRATION_PLAN.md`](docs/UNREAL_MIGRATION_PLAN.md), which links out to the rest of the production package (scope, asset manifest, animation spec, Hunter AI spec, level design, and client acceptance criteria).
+
+---
+
 ## Quick start
 
 No build step, no bundler, no `npm install` required to run it.
@@ -204,13 +218,12 @@ Being explicit about these because a vertical slice that hides its gaps is worse
 
 ## Recommended next production steps
 
-1. **Character pipeline.** Commission or license real character models + a walk/run/idle/crouch/capture/rescue animation set (Mixamo is a fast path for a prototype-to-demo bridge; a contracted artist/mocap pass for the final commercial bar). Wire them in via `GameConfig.characters` — the loader path already exists.
-2. **Audio pass.** Replace the synthesized cues with mastered SFX and a real ambient bed via `GameConfig.audio.assets`; add a music layer (none exists today).
-3. **Rooftop-aware Hunter AI.** Extend `HunterAI`'s state machine with a roof-layer patrol/chase mode so climbing isn't an automatic win condition.
-4. **Device profiling pass.** Run on the actual target iPhone/Android hardware, capture real frame times, and tune `GameConfig.rendering` accordingly (pixel ratio, shadow map size, rain count).
-5. **Expand the block set / add mission variety** if the commercial pitch calls for more than one fixed round shape — the `World.js` layout format is designed to make this additive, not a rewrite.
-6. **Accessibility + settings surface**: exposed audio/graphics settings, remappable controls, colorblind-safe HUD variants.
-7. **Automated tests.** There are currently none. `CollisionSystem`, `DetectionSystem` and the `HunterAI` state transitions are the highest-value places to start — they're pure enough logic to unit test without a renderer.
+**The commercial-fidelity path is now the Unreal Engine 5 vertical slice planned in `docs/`** — see the project status banner at the top of this README and start at [`docs/UNREAL_MIGRATION_PLAN.md`](docs/UNREAL_MIGRATION_PLAN.md). The items below are next steps **for this browser build specifically**, in its role as the ongoing gameplay/systems reference — not a path toward AAA visual fidelity in this stack, which is out of scope going forward.
+
+1. **Keep this build's gameplay in sync with the Unreal build's.** If a gameplay number or rule changes during UE5 development (e.g. a Hunter detection range, a stamina value), update `src/config/gameConfig.js` and the relevant `HunterAI.js`/`PlayerController.js` logic here too, so this remains an accurate reference rather than drifting into a stale one.
+2. **Rooftop-aware Hunter AI.** The Unreal spec (`docs/HUNTER_AI_SPEC.md` §6) explicitly carries forward the current street-only Hunter as a *design decision*, not a gap to close — do not extend `HunterAI.js` here to chase onto rooftops without a corresponding decision in the Unreal spec, or the two builds will disagree about a core mechanic.
+3. **Automated tests.** There are currently none. `CollisionSystem`, `DetectionSystem` and the `HunterAI` state transitions are the highest-value places to start — they're pure enough logic to unit test without a renderer, and would make this build a more reliable regression reference for the Unreal team (`docs/HUNTER_AI_SPEC.md` §7 explicitly calls for side-by-side behavioral validation).
+4. **Bug fixes only, no visual polish.** Character/environment/audio fidelity investment now goes into the Unreal build (`docs/ASSET_MANIFEST.md`); this build's Three.js presentation is intentionally frozen at its current quality level.
 
 ---
 
