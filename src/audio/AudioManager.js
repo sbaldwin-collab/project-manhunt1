@@ -26,8 +26,8 @@ export class AudioManager {
     this.master.gain.value = GameConfig.audio.masterGain;
     this.master.connect(this.ctx.destination);
 
-    this._startLoop('rain', 'rain');
-    this._startLoop('cityAmbience', 'ambience');
+    this._startAmbienceBed();
+    this._startRain();
     this._startLoop('chase', 'chase');
     this._nextAmbientEventAt = performance.now() + 6000;
   }
@@ -80,19 +80,11 @@ export class AudioManager {
   _startLoop(name, type) {
     if (!this.ctx || this._loops[name]) return;
     const src = this.ctx.createBufferSource();
-    src.buffer = this._noiseBuffer(2);
+    src.buffer = this._noiseBuffer(4);
     src.loop = true;
     const filt = this.ctx.createBiquadFilter();
     const g = this.ctx.createGain();
-    if (type === 'rain') {
-      filt.type = 'highpass';
-      filt.frequency.value = 1700;
-      g.gain.value = 0.045;
-    } else if (type === 'ambience') {
-      filt.type = 'lowpass';
-      filt.frequency.value = 350;
-      g.gain.value = 0.03;
-    } else if (type === 'chase') {
+    if (type === 'chase') {
       filt.type = 'bandpass';
       filt.frequency.value = 210;
       filt.Q.value = 0.9;
@@ -101,6 +93,95 @@ export class AudioManager {
     src.connect(filt).connect(g).connect(this.master);
     src.start();
     this._loops[name] = { src, filt, gain: g };
+  }
+
+  /**
+   * Low city "bed": a very quiet, heavily low-passed noise wash plus two
+   * detuned sub-bass oscillators (a distant drone/rumble). The oscillators
+   * are what keep this from reading as pure hiss — tonal content under a
+   * noise floor sounds like "distant city," flat filtered noise alone
+   * sounds like radio static, which is what this replaces.
+   */
+  _startAmbienceBed() {
+    if (!this.ctx || this._loops.cityAmbience) return;
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = this._noiseBuffer(6);
+    src.loop = true;
+    const filt = this.ctx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.value = 180;
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.value = 0.014;
+    src.connect(filt).connect(noiseGain).connect(this.master);
+    src.start();
+
+    const droneGain = this.ctx.createGain();
+    droneGain.gain.value = 0.02;
+    droneGain.connect(this.master);
+    [54, 57.5].forEach((freq) => {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const oscFilter = this.ctx.createBiquadFilter();
+      oscFilter.type = 'lowpass';
+      oscFilter.frequency.value = 220;
+      osc.connect(oscFilter).connect(droneGain);
+      osc.start();
+    });
+
+    this._loops.cityAmbience = { src, filt, gain: noiseGain, droneGain };
+  }
+
+  /**
+   * Rain as a stream of short, randomly-timed droplet impulses over a very
+   * quiet broadband wash, instead of one continuous filtered-noise loop.
+   * A steady highpassed noise loop is indistinguishable from static; the
+   * irregular patter of individual drops is what actually reads as rain.
+   */
+  _startRain() {
+    if (!this.ctx || this._rainStarted) return;
+    this._rainStarted = true;
+
+    const washSrc = this.ctx.createBufferSource();
+    washSrc.buffer = this._noiseBuffer(5);
+    washSrc.loop = true;
+    const washFilt = this.ctx.createBiquadFilter();
+    washFilt.type = 'highpass';
+    washFilt.frequency.value = 3000;
+    const washGain = this.ctx.createGain();
+    washGain.gain.value = 0.006;
+    washSrc.connect(washFilt).connect(washGain).connect(this.master);
+    washSrc.start();
+    this._loops.rain = { src: washSrc, filt: washFilt, gain: washGain };
+
+    this._scheduleNextRaindrop();
+  }
+
+  _scheduleNextRaindrop() {
+    if (!this.ctx) return;
+    const delayMs = 16 + Math.random() * 55;
+    this._raindropTimeout = setTimeout(() => {
+      this._playRaindrop();
+      this._scheduleNextRaindrop();
+    }, delayMs);
+  }
+
+  _playRaindrop() {
+    const src = this.ctx.createBufferSource();
+    src.buffer = this._noiseBuffer(0.025);
+    const filt = this.ctx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.value = 2400 + Math.random() * 2600;
+    filt.Q.value = 0.6;
+    const g = this.ctx.createGain();
+    const t0 = this.ctx.currentTime;
+    const peak = 0.01 + Math.random() * 0.016;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.02 + Math.random() * 0.05);
+    src.connect(filt).connect(g).connect(this.master);
+    src.start(t0);
   }
 
   play(name) {
@@ -174,8 +255,9 @@ export class AudioManager {
   }
 
   setChasing(active) {
+    this._chasing = active;
     const loop = this._loops.chase;
-    if (loop && this.ctx) loop.gain.gain.setTargetAtTime(active ? 0.045 : 0, this.ctx.currentTime, 0.4);
+    if (loop && this.ctx && !active) loop.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.4);
   }
 
   /** intensity: 0..1, typically driven by the detection meter. now: performance.now() ms. */
@@ -195,6 +277,14 @@ export class AudioManager {
     if (now > this._nextAmbientEventAt) {
       this._nextAmbientEventAt = now + 9000 + Math.random() * 15000;
       this.play(Math.random() < 0.55 ? 'siren' : 'subway');
+    }
+
+    if (this._chasing) {
+      const loop = this._loops.chase;
+      if (loop) {
+        const pulse = 0.033 + Math.sin(now / 280) * 0.012;
+        loop.gain.gain.setTargetAtTime(pulse, this.ctx.currentTime, 0.08);
+      }
     }
   }
 }
