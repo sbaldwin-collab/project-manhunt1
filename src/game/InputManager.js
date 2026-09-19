@@ -71,7 +71,13 @@ export class InputManager {
           joyBase.style.top = `${e.clientY - 50}px`;
           joyBase.style.display = 'block';
         }
-        joyZone.setPointerCapture(e.pointerId);
+        try {
+          joyZone.setPointerCapture(e.pointerId);
+        } catch {
+          // Some browsers/synthetic pointer sources reject capture on a
+          // pointer they don't consider active; movement tracking below
+          // works fine without it, so this is not fatal.
+        }
         moveKnob(e.clientX, e.clientY);
       });
       joyZone.addEventListener('pointermove', (e) => {
@@ -95,7 +101,11 @@ export class InputManager {
         this._lookState.id = e.pointerId;
         this._lookState.x = e.clientX;
         this._lookState.y = e.clientY;
-        lookZone.setPointerCapture(e.pointerId);
+        try {
+          lookZone.setPointerCapture(e.pointerId);
+        } catch {
+          // See the matching try/catch in the joystick handler above.
+        }
       });
       lookZone.addEventListener('pointermove', (e) => {
         if (!this._lookState.active || e.pointerId !== this._lookState.id) return;
