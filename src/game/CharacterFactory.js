@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GameConfig } from '../config/gameConfig.js';
 import { damp } from '../utils.js';
 
 const SKIN_TONES = [0xe0aa83, 0xc98f66, 0x8b5a3c, 0x6b4530];
+const EYE_COLOR = 0x1c140f;
 
 function mat(color, roughness = 0.78, metalness = 0.03, extra = {}) {
   return new THREE.MeshStandardMaterial({ color, roughness, metalness, ...extra });
@@ -35,17 +37,28 @@ export class Character {
     const accent = this.opts.accent ?? 0x888888;
     const skin = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
     const isHunter = this.role === 'hunter';
-    const jacketMat = mat(accent, 0.78, 0.05);
+    const jacketMat = mat(accent, 0.72, 0.06);
     const pantsMat = mat(isHunter ? 0x14151a : 0x1b2433, 0.85, 0.04);
-    const skinMat = mat(skin, 0.92, 0.0);
-    const shoeMat = mat(0x0a0c10, 0.9, 0.05);
+    const skinMat = mat(skin, 0.55, 0.0);
+    const shoeMat = mat(0x0a0c10, 0.75, 0.08);
 
     this.hip = new THREE.Group();
     this.hip.position.y = this.baseHipY;
     this.root.add(this.hip);
 
-    this.legL = this._limb(pantsMat, 0.1, 0.82, shoeMat);
-    this.legR = this._limb(pantsMat, 0.1, 0.82, shoeMat);
+    // Pelvis block bridges the legs into the torso instead of leaving a gap
+    // between the leg capsules and the spine's base.
+    const pelvis = new THREE.Mesh(
+      new RoundedBoxGeometry((isHunter ? 0.66 : 0.58) * 0.78, 0.16, 0.28, 3, 0.045),
+      pantsMat,
+    );
+    pelvis.position.y = 0.08;
+    pelvis.castShadow = true;
+    pelvis.receiveShadow = true;
+    this.hip.add(pelvis);
+
+    this.legL = this._limb(pantsMat, 0.1, 0.82, shoeMat, 'foot');
+    this.legR = this._limb(pantsMat, 0.1, 0.82, shoeMat, 'foot');
     this.legL.pivot.position.set(-0.14, 0, 0);
     this.legR.pivot.position.set(0.14, 0, 0);
     this.hip.add(this.legL.pivot, this.legR.pivot);
@@ -55,29 +68,56 @@ export class Character {
     this.hip.add(this.spine);
 
     const torsoWidth = isHunter ? 0.66 : 0.58;
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(torsoWidth, 0.56, 0.32), jacketMat);
-    torso.position.y = 0.32;
-    torso.castShadow = true;
-    torso.receiveShadow = true;
-    this.spine.add(torso);
+
+    // Torso is built from a narrower waist and a wider chest (rounded, not
+    // boxy) instead of one flat slab -- the taper is what reads as a human
+    // ribcage-to-hip silhouette rather than a crate.
+    const waist = new THREE.Mesh(
+      new RoundedBoxGeometry(torsoWidth * 0.84, 0.26, 0.29, 3, 0.05),
+      pantsMat,
+    );
+    waist.position.y = 0.17;
+    waist.castShadow = true;
+    waist.receiveShadow = true;
+    this.spine.add(waist);
+
+    const chest = new THREE.Mesh(
+      new RoundedBoxGeometry(torsoWidth, 0.34, 0.33, 3, 0.06),
+      jacketMat,
+    );
+    chest.position.y = 0.47;
+    chest.castShadow = true;
+    chest.receiveShadow = true;
+    this.spine.add(chest);
+    this.chestY = 0.47;
     this._chestDetail(accent, isHunter);
 
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.09, 8), skinMat);
-    neck.position.y = 0.63;
+    // Shoulder caps round out the chest-to-arm join.
+    for (const side of [-1, 1]) {
+      const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), jacketMat);
+      shoulder.position.set(side * torsoWidth * 0.46, 0.6, 0);
+      shoulder.castShadow = true;
+      this.spine.add(shoulder);
+    }
+
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.11, 10), skinMat);
+    neck.position.y = 0.68;
     this.spine.add(neck);
 
     this.head = new THREE.Group();
-    this.head.position.y = 0.75;
-    const skull = new THREE.Mesh(new THREE.SphereGeometry(0.145, 14, 10), skinMat);
+    this.head.position.y = 0.81;
+    const skull = new THREE.Mesh(new THREE.SphereGeometry(0.145, 22, 18), skinMat);
+    skull.scale.set(0.94, 1.08, 1.0);
     skull.castShadow = true;
     this.head.add(skull);
+    this._face(skin);
     this._headwear(accent, isHunter);
     this.spine.add(this.head);
 
-    this.armL = this._limb(jacketMat, 0.075, 0.56, skinMat);
-    this.armR = this._limb(jacketMat, 0.075, 0.56, skinMat);
-    this.armL.pivot.position.set(-0.34, 0.58, 0);
-    this.armR.pivot.position.set(0.34, 0.58, 0);
+    this.armL = this._limb(jacketMat, 0.075, 0.56, skinMat, 'hand');
+    this.armR = this._limb(jacketMat, 0.075, 0.56, skinMat, 'hand');
+    this.armL.pivot.position.set(-torsoWidth * 0.46, 0.6, 0);
+    this.armR.pivot.position.set(torsoWidth * 0.46, 0.6, 0);
     this.spine.add(this.armL.pivot, this.armR.pivot);
 
     if (isHunter) this._flashlight();
@@ -85,37 +125,57 @@ export class Character {
     this.root.scale.setScalar(this.opts.scale ?? 1);
   }
 
-  _limb(mainMat, radius, length, tipMat) {
+  _face(skin) {
+    const eyeMat = mat(EYE_COLOR, 0.25, 0.1);
+    for (const side of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), eyeMat);
+      eye.position.set(side * 0.052, 0.02, 0.132);
+      this.head.add(eye);
+    }
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.045, 8), mat(skin, 0.6, 0));
+    nose.rotation.x = Math.PI / 2;
+    nose.position.set(0, -0.015, 0.142);
+    this.head.add(nose);
+  }
+
+  _limb(mainMat, radius, length, tipMat, tipShape = 'default') {
     const pivot = new THREE.Group();
-    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length * 0.6, 4, 8), mainMat);
+    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length * 0.6, 6, 10), mainMat);
     mesh.position.y = -length / 2;
     mesh.castShadow = true;
     pivot.add(mesh);
-    const tip = new THREE.Mesh(new THREE.SphereGeometry(radius * 0.95, 8, 6), tipMat);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(radius * 0.95, 10, 8), tipMat);
     tip.position.y = -length;
+    if (tipShape === 'hand') {
+      tip.scale.set(1.0, 0.72, 1.25);
+    } else if (tipShape === 'foot') {
+      tip.scale.set(1.2, 0.55, 1.85);
+      tip.position.z = 0.045;
+    }
     tip.castShadow = true;
     pivot.add(tip);
     return { pivot, mesh };
   }
 
   _chestDetail(accent, isHunter) {
+    const chestY = this.chestY;
     if (isHunter) {
       const vest = new THREE.Mesh(
-        new THREE.BoxGeometry(0.5, 0.46, 0.1),
+        new RoundedBoxGeometry(0.5, 0.3, 0.1, 2, 0.03),
         mat(0x14151a, 0.7, 0.15),
       );
-      vest.position.set(0, 0.36, -0.19);
+      vest.position.set(0, chestY, -0.19);
       this.spine.add(vest);
       const badge = new THREE.Mesh(new THREE.CircleGeometry(0.045, 10), mat(0xd8b34a, 0.4, 0.7));
-      badge.position.set(0.15, 0.5, -0.245);
+      badge.position.set(0.15, chestY + 0.1, -0.245);
       this.spine.add(badge);
       return;
     }
-    const pack = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.44, 0.16), mat(0x1a2028, 0.82, 0.04));
-    pack.position.set(0, 0.34, -0.22);
+    const pack = new THREE.Mesh(new RoundedBoxGeometry(0.36, 0.32, 0.16, 2, 0.035), mat(0x1a2028, 0.82, 0.04));
+    pack.position.set(0, chestY, -0.22);
     this.spine.add(pack);
     const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.06, 0.04), mat(accent, 0.6, 0.1));
-    stripe.position.set(0, 0.42, -0.25);
+    stripe.position.set(0, chestY + 0.1, -0.25);
     this.spine.add(stripe);
   }
 

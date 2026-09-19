@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GameConfig } from '../config/gameConfig.js';
 import { World } from '../world/World.js';
 import { GROUND_LAYER } from '../world/CollisionSystem.js';
@@ -22,6 +26,7 @@ export class Game {
     this._buildRenderer();
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(GameConfig.camera.fovBase, innerWidth / innerHeight, 0.1, 200);
+    this._buildComposer();
 
     this.world = new World(this.scene, { mobile: this.mobile });
     this.detection = new DetectionSystem(this.world.collision);
@@ -84,10 +89,33 @@ export class Game {
     this.container.appendChild(this.renderer.domElement);
   }
 
+  /**
+   * A light UnrealBloomPass so streetlamps, lit windows, and storefront/sign
+   * emissives glow instead of just being flat-bright pixels — one of the
+   * highest-value, lowest-risk visual upgrades for a neon/practical-lit
+   * night scene. Threshold is low enough to catch the world's emissive
+   * (toneMapped:false) materials — window glow, signage, puddle highlights
+   * — without blooming the whole image.
+   */
+  _buildComposer() {
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.setPixelRatio(this.renderer.getPixelRatio());
+    this.composer.setSize(innerWidth, innerHeight);
+
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.4, 0.2);
+    this.composer.addPass(this.bloomPass);
+
+    this.composer.addPass(new OutputPass());
+  }
+
   _onResize() {
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(innerWidth, innerHeight);
+    this.composer.setSize(innerWidth, innerHeight);
+    this.bloomPass.setSize(innerWidth, innerHeight);
   }
 
   _onStart() {
@@ -174,7 +202,7 @@ export class Game {
     this.camRig.update(dt, t, { player: this.player, input: this.input, sprinting: this.player.sprinting });
     this.audio.update(t);
 
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
     requestAnimationFrame((tt) => this._loop(tt));
   }
 
